@@ -2,4 +2,4 @@
 
 | Platform | Community / Account | Link | My First Contribution | Human Answer | My Next Answer | Design Change Made |
 |---|---|---|---|---|---|---|
-| Reddit | r/creativesmallbusiness | https://www.reddit.com/r/creativesmallbusiness/comments/1vo0pux/question_for_supply_sellers_how_much_does_a_fake/ | Asked about error costs (False Positive vs False Negative) | [Pending] | [Pending] | [Pending] |
+| Reddit | r/TrustAndSafety | [Link] | Asked about operationalizing "Warn" and thresholds | User explained Warn = soft friction/manual queue, and Hide requires >85% confidence | Asked how teams handle manual queue backlogs | Updated the agent's policy to use specific probability bands (Warn: 50-84%, Hide: >85%) |
