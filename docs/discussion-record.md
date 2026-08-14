@@ -2,4 +2,4 @@
 
 | Platform | Community / Account | Link | My First Contribution | Human Answer | My Next Answer | Design Change Made |
 |---|---|---|---|---|---|---|
-| Reddit | r/TrustAndSafety | https://www.reddit.com/r/trustandsafetypros/comments/1vo3hrr/defining_action_tiers_in_automated_content/ | Asked about operationalizing "Warn" and thresholds | User explained Warn = soft friction/manual queue, and Hide requires >85% confidence | Asked how teams handle manual queue backlogs | Updated the agent's policy to use specific probability bands (Warn: 50-84%, Hide: >85%) |
+| Reddit | r/TrustAndSafety | [Reddit](https://www.reddit.com/r/trustandsafetypros/comments/1vo3hrr/defining_action_tiers_in_automated_content/) | Asked about operationalizing "Warn" and thresholds | User explained Warn = soft friction/manual queue, and Hide requires >85% confidence | Asked how teams handle manual queue backlogs | Updated the agent's policy to use specific probability bands (Warn: 50-84%, Hide: >85%) |
