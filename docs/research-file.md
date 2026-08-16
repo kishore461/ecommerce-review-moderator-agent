@@ -35,10 +35,37 @@ To design a utility-based probabilistic AI agent that makes cost-sensitive moder
 
 ## Relevant X Accounts
 
-- **@julianmcauley (Julian McAuley):** Professor whose research focuses on massive e-commerce datasets, review analysis, and opinion spam.
-- **@yejinchoi (Yejin Choi):** Pioneer in NLP and deception detection, including foundational work on deceptive opinion spam.
-- **@yoavgo (Yoav Goldberg):** NLP researcher who frequently discusses LLM classification reliability and evaluation metrics.
-- **@BingLiu_UIC (Bing Liu):** Foundational researcher in sentiment analysis and deceptive review identification.
+### Verified and followed (25)
+
+| # | Handle | Relevance to this problem |
+|---|---|---|
+| 1 | @HamelHusain | LLM evals, error analysis, LLM-as-judge design |
+| 2 | @sh_reya | Human-AI systems, LLM judges, data validation (CMU) |
+| 3 | @lateinteraction | Agent reliability, DSPy pipeline optimisation (MIT) |
+| 4 | @zacharylipton | Critic of accuracy-only ML claims; calibration (CMU) |
+| 5 | @simonw | Practical LLM reliability and text-detection limits |
+| 6 | @tdietterich | Cost-sensitive learning and open-category detection |
+| 7 | @noUpside | Adversarial abuse and paid manipulation campaigns |
+| 8 | @alexstamos | Platform abuse and enforcement at scale |
+| 9 | @eugeneyan | Ex-Amazon applied science; recommender and eval design |
+| 10 | @random_walker | AI evaluation and over-claiming in ML results |
+| 11 | @jxnlco | Structured outputs and eval pipelines |
+| 12 | @ShreyaR | Guardrails AI; validation thresholds on LLM outputs |
+| 13 | @pangram | AI-text-detection vendor; its false-positive disputes are this project's error-cost problem |
+| 14 | @savipww | Data-driven threads on AI-generated content share |
+| 15 | @SStevenWang | AI-generated peer reviews and disclosure thresholds |
+| 16 | @OfficialXYO | Open questions on AI detection and trust |
+| 17 | @mutant1879 | Critic of AI-detector false positives and burden of proof |
+| 18 | @isofunds | Eval-driven development material for agents |
+| 19 | @manthanguptaa | Builds agent systems; posts on evals |
+| 20 | @florian_jue | Ships coding agents; posts on metric gaming |
+| 21 | @Meridian_Fi | Digital trust and agent reliability commentary |
+| 22 | @yoavgo | NLP classification reliability and evaluation |
+| 23 | @evelyndouek | Content-moderation law and procedural fairness |
+| 24 | @onlinenewsporta | Currently reporting on fake five-star Google reviews |
+| 25 | @SEOVillas | Local-SEO practitioner view on fake reviews |
+
+
 
 ## Useful Papers, Articles, Repositories, or Datasets
 
