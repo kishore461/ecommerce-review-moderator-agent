@@ -65,7 +65,28 @@ To design a utility-based probabilistic AI agent that makes cost-sensitive moder
 | 24 | @onlinenewsporta | Currently reporting on fake five-star Google reviews |
 | 25 | @SEOVillas | Local-SEO practitioner view on fake reviews |
 
+The list covers the four categories required: researchers (1–10, 22), engineers and builders (11, 12, 18–21), users and practitioners (13, 24, 25), and critics (14–17, 23). Every account was opened individually on 16 August 2026 and confirmed to have posted recently.
 
+### Checked and rejected (10)
+
+| Handle | Reason for rejection |
+|---|---|
+| @julianmcauley | Account exists but has 22 followers and no posts. Not the researcher's working account. |
+| @BingLiu_UIC | Account does not exist. |
+| @yejinchoi | Wrong handle. The real account is @YejinChoinka, whose last post was January 2026. |
+| @tspainfo | Trust & Safety Professional Association. Last post April 2022. |
+| @techpolicypress | Last post December 2023. |
+| @mmasnick | No visible posts; moved to another platform. |
+| @clefourrier | Profile states the account is inactive until December 2026. |
+| @Chekkee_ | Content-moderation vendor. Last post January 2026. |
+| @marketplacepulse | Account does not exist. |
+| @juokaz | E-commerce analyst, but last post March 2026. |
+
+### Note on where the relevant discussion is located
+
+Searches on X for "fake reviews", "opinion spam", "review fraud" and "review bombing" returned almost no technical content — the results were search-engine-optimisation agencies, cryptocurrency scam warnings, entertainment review-bombing disputes, and spam reports directed at Google Maps.
+
+The active technical discussion relevant to this problem concerns false positives in AI-text detectors: users post cases where two detectors return different verdicts on the same text and dispute who carries the burden of proof. That is the same decision problem as this project stated with a different label — classification from text alone, under partial observability, with asymmetric error costs. The accounts followed reflect this finding rather than the initial assumption that content-moderation policy specialists would be reachable on this platform.
 
 ## Useful Papers, Articles, Repositories, or Datasets
 
@@ -78,7 +99,9 @@ To design a utility-based probabilistic AI agent that makes cost-sensitive moder
 ## Questions to Answer
 
 - **Hidden states:** Which hidden state did I not include? Is it necessary to distinguish between bot-generated spam and human-paid fake reviews?
+  - *Partially answered (r/Yelp, u/ADrPepperGuy, 17 Aug):* a third state was missing entirely — the **non-independent solicited review**, written by a friend or family member of the business. The visit genuinely happened and the detail is real, so it is neither a genuine independent customer nor a paid fake. It is invisible to the specificity signal for exactly that reason.
 - **Evidence:** Which evidence changes the belief? Can the agent reliably detect a mismatch between a 5-star rating and highly negative text?
+  - *Partially answered (r/Yelp, u/studyhall109 and u/XxLogitech98xX, 17 Aug):* **specificity** appears to be a stronger text-only signal than rating/sentiment mismatch. Genuine reviews name falsifiable detail — a dish, a quantity, a sequence of events — while planted reviews stay generic, and this holds on positive reviews as well as negative ones. Still to test on my own data.
 - **Costs:** Which incorrect decision has the highest cost? Is it more damaging to hide a genuine 5-star review for premium silk fabric, or to permit a 1-star competitor sabotage review for dori thread?
 - **Human Handoff:** When must the agent ask a human for help (the "warn" or "escalate" action)?
 - **Comparability:** Are historical text patterns of spam comparable to modern LLM-generated fake reviews?
@@ -88,3 +111,5 @@ To design a utility-based probabilistic AI agent that makes cost-sensitive moder
 - **Prompt Used:** _"I am a beginner. I want to design an AI agent for this problem: The agent observes a newly submitted customer review text and star rating. It must select permit, warn, hide, or report because whether the post is a genuine customer experience versus a paid spam/competitor fake review is not known. The agent must make decisions when information is not complete. I want to build a utility-based probabilistic agent. Help me prepare my research: Give me technical terms, search queries, 5-10 Reddit communities with reasons, X accounts, questions on hidden states/actions/errors, claims needing testing, and unclear parts."_
 - **AI Error 1 (Scope Creep):** The AI initially assumed the agent would have access to user metadata (like IP address, purchase history, and account age). This had to be corrected to fit the strict constraint of the problem statement, which states the agent only observes the review text and the star rating.
 - **AI Error 2 (Certainty):** The AI originally presented LLM probability scores as highly accurate, failing to note that language models often suffer from poor calibration (being overly confident in wrong answers), which must be tested for this agent.
+- **AI Error 3 (Fabricated and inactive X accounts):** The assistant produced four X accounts for this project. On verification, one (@BingLiu_UIC) does not exist, one (@julianmcauley) is an empty 22-follower account rather than the researcher's actual presence, and the handle given for Yejin Choi was wrong — the correct account (@YejinChoinka) has been inactive since January 2026. A second round of suggestions covering trust-and-safety and technology-policy accounts was also largely unusable, as most of those accounts stopped posting between 2022 and 2024. Every profile was opened individually on 16 August 2026 to establish this. The correction was to abandon the assumption that content-moderation policy specialists are reachable on this platform and to follow the AI-evaluation and AI-text-detection community instead, where the equivalent technical discussion is active. **Lesson: an AI-supplied handle is a claim to check, not a source.**
+- **AI Error 4 (Unverified method assumption):** In drafting a public comment I let an assumption about a cited study go unchecked — that three AI detectors had their confidence scores averaged together. The study's author (@savipww) corrected this publicly: each detector was binarised on its own rule before combining, so scores were never averaged. The error was mine to own in public, and it is recorded here because the underlying lesson is the one this project is about — a plausible reconstruction of a method is not the method.
