@@ -1,0 +1,27 @@
+{
+  "generated_utc": "2026-08-17T14:37:49+00:00",
+  "model_version": "agent-0.1.0",
+  "baseline_version": "baseline-keyword-1.0",
+  "baseline_threshold_tuned_on_fit": 1,
+  "fit_rows": 6000,
+  "test_rows": 40,
+  "probe_rows": 12,
+  "prior_main": {
+    "genuine": 0.5,
+    "fake": 0.5,
+    "solicited": 0.0
+  },
+  "prior_probe": {
+    "genuine": 0.6,
+    "fake": 0.3,
+    "solicited": 0.1
+  },
+  "fixed_band_act_threshold": 0.85,
+  "fixed_band_queue_threshold": 0.5,
+  "cost_total_reviews_assumed": 200,
+  "cost_volume_factor": 1.0,
+  "testset_seed": 20260817,
+  "lexical_vocab_size": 3835,
+  "lexical_llr_clip": 4.0,
+  "lexical_min_doc_freq": 5
+}

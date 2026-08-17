@@ -1,6 +1,19 @@
-.env
+# Python
 __pycache__/
-*.pyc
-.DS_Store
+*.py[cod]
+.venv/
 venv/
-.vscode/
+.ipynb_checkpoints/
+
+# Source dataset — 15MB, download separately from Kaggle.
+# See README.md "Reproducing the experiment".
+data/fake reviews dataset.csv
+
+# Generated split — 2.3MB, regenerates deterministically from
+# experiments/build_testset.py with seed 20260817.
+data/fit_set.csv
+
+# The held-out test set, the probe set and everything in results/ ARE
+# committed on purpose: the brief requires saved predictions and actions,
+# and a reader must be able to check the reported numbers without first
+# obtaining the source dataset.

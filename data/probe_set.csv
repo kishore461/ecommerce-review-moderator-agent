@@ -1,0 +1,13 @@
+case_id,text,rating,category,source_label,true_state,probe_kind
+P000,Ordered the ribeye for my brother-in-law's opening night. Came out at a perfect medium rare and the kitchen sent out extra bread when they saw we were waiting. Been going since they opened in March.,5.0,probe_synthetic,HAND,solicited,solicited_specific
+P001,"My sister runs the front of house here and I eat here most Fridays. The carbonara is genuinely good, and they fixed the noise problem by adding panels to the back wall about two months ago.",5.0,probe_synthetic,HAND,solicited,solicited_specific
+P002,The lifetime sharpening on the custom knives is a great value and the craftsmanship is on another level. Worth every penny. Ask for the flagship model.,5.0,probe_synthetic,HAND,fake,harvested_specificity
+P003,"Parking was easy, the appetizer came out in about ten minutes, and the entree was excellent. Highly recommend to anyone in the area.",5.0,probe_synthetic,HAND,fake,harvested_specificity
+P004,Absolutely wonderful. Truly a fantastic experience waiting fifty minutes for a cold sandwich. Perfect.,1.0,probe_synthetic,HAND,genuine,sarcasm_mismatch
+P005,"Terrible, awful, I hated every second of having to admit this is the best pizza in the city and now I have to drive here every week.",5.0,probe_synthetic,HAND,genuine,sarcasm_mismatch
+P006,Works. Fine.,4.0,probe_synthetic,HAND,genuine,genuine_terse
+P007,"Good product, arrived on time.",5.0,probe_synthetic,HAND,genuine,genuine_terse
+P008,"Great product, great quality, highly recommend! Love it! Best purchase ever!",5.0,probe_synthetic,HAND,fake,low_effort_fake
+P009,Excellent quality and great value. Very happy with this purchase. Would recommend.,5.0,probe_synthetic,HAND,fake,low_effort_fake
+P010,"I asked for no cheese and it arrived covered in cheese. Sent it back, the second one had cheese too. Forty minutes for a sandwich I could not eat.",1.0,probe_synthetic,HAND,genuine,genuine_specific_negative
+P011,"Do not waste your money here. Worst place in town. Absolutely terrible, never going back.",1.0,probe_synthetic,HAND,fake,vague_negative_fake

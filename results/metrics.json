@@ -1,0 +1,314 @@
+[
+  {
+    "set": "Held-out test set",
+    "n_cases": 40,
+    "systems": {
+      "baseline_keyword": {
+        "confusion_matrix": {
+          "tp": 11,
+          "fp": 6,
+          "tn": 14,
+          "fn": 9,
+          "routed": 0
+        },
+        "precision": 0.6470588235294118,
+        "recall": 0.55,
+        "f1": 0.5945945945945946,
+        "false_positives": 6,
+        "false_negatives": 9,
+        "accuracy_on_decided": 0.625,
+        "human_review_rate": 0.0,
+        "decided_rate": 1.0,
+        "total_decision_cost": 68.0,
+        "mean_decision_cost": 1.7,
+        "calibration": {
+          "note": "no probabilistic output",
+          "bins": [],
+          "ece": null
+        },
+        "action_counts": {
+          "permit": 23,
+          "flag_with_explanation": 17,
+          "route_to_human": 0,
+          "hide": 0
+        }
+      },
+      "expected_cost": {
+        "confusion_matrix": {
+          "tp": 13,
+          "fp": 1,
+          "tn": 13,
+          "fn": 2,
+          "routed": 11
+        },
+        "precision": 0.9285714285714286,
+        "recall": 0.8666666666666667,
+        "f1": 0.896551724137931,
+        "false_positives": 1,
+        "false_negatives": 2,
+        "accuracy_on_decided": 0.896551724137931,
+        "human_review_rate": 0.275,
+        "decided_rate": 0.725,
+        "total_decision_cost": 31.0,
+        "mean_decision_cost": 0.775,
+        "calibration": {
+          "bins": [
+            {
+              "bin": "[0.0,0.2)",
+              "n": 15,
+              "mean_p": 0.0245,
+              "observed": 0.1333
+            },
+            {
+              "bin": "[0.2,0.4)",
+              "n": 4,
+              "mean_p": 0.3292,
+              "observed": 0.5
+            },
+            {
+              "bin": "[0.4,0.6)",
+              "n": 1,
+              "mean_p": 0.5915,
+              "observed": 1.0
+            },
+            {
+              "bin": "[0.6,0.8)",
+              "n": 5,
+              "mean_p": 0.6959,
+              "observed": 0.2
+            },
+            {
+              "bin": "[0.8,1.0)",
+              "n": 15,
+              "mean_p": 0.972,
+              "observed": 0.9333
+            }
+          ],
+          "ece": 0.1446
+        },
+        "action_counts": {
+          "permit": 15,
+          "flag_with_explanation": 0,
+          "route_to_human": 11,
+          "hide": 14
+        }
+      },
+      "fixed_band": {
+        "confusion_matrix": {
+          "tp": 14,
+          "fp": 1,
+          "tn": 15,
+          "fn": 4,
+          "routed": 6
+        },
+        "precision": 0.9333333333333333,
+        "recall": 0.7777777777777778,
+        "f1": 0.8484848484848485,
+        "false_positives": 1,
+        "false_negatives": 4,
+        "accuracy_on_decided": 0.8529411764705882,
+        "human_review_rate": 0.15,
+        "decided_rate": 0.85,
+        "total_decision_cost": 42.0,
+        "mean_decision_cost": 1.05,
+        "calibration": {
+          "bins": [
+            {
+              "bin": "[0.0,0.2)",
+              "n": 15,
+              "mean_p": 0.0245,
+              "observed": 0.1333
+            },
+            {
+              "bin": "[0.2,0.4)",
+              "n": 4,
+              "mean_p": 0.3292,
+              "observed": 0.5
+            },
+            {
+              "bin": "[0.4,0.6)",
+              "n": 1,
+              "mean_p": 0.5915,
+              "observed": 1.0
+            },
+            {
+              "bin": "[0.6,0.8)",
+              "n": 5,
+              "mean_p": 0.6959,
+              "observed": 0.2
+            },
+            {
+              "bin": "[0.8,1.0)",
+              "n": 15,
+              "mean_p": 0.972,
+              "observed": 0.9333
+            }
+          ],
+          "ece": 0.1446
+        },
+        "action_counts": {
+          "permit": 19,
+          "flag_with_explanation": 15,
+          "route_to_human": 6,
+          "hide": 0
+        }
+      }
+    }
+  },
+  {
+    "set": "Supplementary probe set",
+    "n_cases": 12,
+    "systems": {
+      "baseline_keyword": {
+        "confusion_matrix": {
+          "tp": 6,
+          "fp": 3,
+          "tn": 2,
+          "fn": 1,
+          "routed": 0
+        },
+        "precision": 0.6666666666666666,
+        "recall": 0.8571428571428571,
+        "f1": 0.75,
+        "false_positives": 3,
+        "false_negatives": 1,
+        "accuracy_on_decided": 0.6666666666666666,
+        "human_review_rate": 0.0,
+        "decided_rate": 1.0,
+        "total_decision_cost": 14.5,
+        "mean_decision_cost": 1.2083,
+        "calibration": {
+          "note": "no probabilistic output",
+          "bins": [],
+          "ece": null
+        },
+        "action_counts": {
+          "permit": 3,
+          "flag_with_explanation": 9,
+          "route_to_human": 0,
+          "hide": 0
+        }
+      },
+      "expected_cost": {
+        "confusion_matrix": {
+          "tp": 2,
+          "fp": 0,
+          "tn": 5,
+          "fn": 4,
+          "routed": 1
+        },
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "false_positives": 0,
+        "false_negatives": 4,
+        "accuracy_on_decided": 0.6363636363636364,
+        "human_review_rate": 0.08333333333333333,
+        "decided_rate": 0.9166666666666666,
+        "total_decision_cost": 15.0,
+        "mean_decision_cost": 1.25,
+        "calibration": {
+          "bins": [
+            {
+              "bin": "[0.0,0.2)",
+              "n": 6,
+              "mean_p": 0.162,
+              "observed": 0.5
+            },
+            {
+              "bin": "[0.2,0.4)",
+              "n": 3,
+              "mean_p": 0.3021,
+              "observed": 0.3333
+            },
+            {
+              "bin": "[0.4,0.6)",
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "bin": "[0.6,0.8)",
+              "n": 1,
+              "mean_p": 0.6216,
+              "observed": 1.0
+            },
+            {
+              "bin": "[0.8,1.0)",
+              "n": 2,
+              "mean_p": 0.9898,
+              "observed": 1.0
+            }
+          ],
+          "ece": 0.21
+        },
+        "action_counts": {
+          "permit": 9,
+          "flag_with_explanation": 0,
+          "route_to_human": 1,
+          "hide": 2
+        }
+      },
+      "fixed_band": {
+        "confusion_matrix": {
+          "tp": 2,
+          "fp": 0,
+          "tn": 5,
+          "fn": 4,
+          "routed": 1
+        },
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1": 0.5,
+        "false_positives": 0,
+        "false_negatives": 4,
+        "accuracy_on_decided": 0.6363636363636364,
+        "human_review_rate": 0.08333333333333333,
+        "decided_rate": 0.9166666666666666,
+        "total_decision_cost": 17.0,
+        "mean_decision_cost": 1.4167,
+        "calibration": {
+          "bins": [
+            {
+              "bin": "[0.0,0.2)",
+              "n": 6,
+              "mean_p": 0.162,
+              "observed": 0.5
+            },
+            {
+              "bin": "[0.2,0.4)",
+              "n": 3,
+              "mean_p": 0.3021,
+              "observed": 0.3333
+            },
+            {
+              "bin": "[0.4,0.6)",
+              "n": 0,
+              "mean_p": null,
+              "observed": null
+            },
+            {
+              "bin": "[0.6,0.8)",
+              "n": 1,
+              "mean_p": 0.6216,
+              "observed": 1.0
+            },
+            {
+              "bin": "[0.8,1.0)",
+              "n": 2,
+              "mean_p": 0.9898,
+              "observed": 1.0
+            }
+          ],
+          "ece": 0.21
+        },
+        "action_counts": {
+          "permit": 9,
+          "flag_with_explanation": 2,
+          "route_to_human": 1,
+          "hide": 0
+        }
+      }
+    }
+  }
+]
