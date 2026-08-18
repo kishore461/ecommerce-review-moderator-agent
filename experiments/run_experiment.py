@@ -230,10 +230,9 @@ def main() -> None:
             })
             for name, ag in agents.items():
                 d = ag.decide(cid, text, rating)
-                ag.feedback.record_outcome(
-                    cid, d.action,
-                    State(r["true_state"]) if d.action == Action.ROUTE else None,
-                )
+                # Ground truth stands in for a human verdict here. That is a
+                # simulation convenience, not feedback - see README limitation 8.
+                ag.feedback.record_outcome(cid, d.action, State(r["true_state"]))
                 records.append({
                     "case_id": cid, "system": name,
                     "policy_version": d.policy_version,
@@ -255,10 +254,14 @@ def main() -> None:
             w.writerows(records)
         print(f"{out_name}: {len(records)} decisions over {len(rows)} cases")
         for name, ag in agents.items():
-            rate = ag.feedback.overturn_rate()
-            if rate is not None:
-                print(f"  {name}: human-queue overturn rate {rate:.3f} "
-                      f"(genuine among routed)")
+            q = ag.feedback.genuine_rate_in_queue()
+            ap = ag.feedback.appeal_overturn_rate()
+            if q is not None:
+                print(f"  {name}: genuine rate inside the queue {q:.3f} "
+                      f"(prevalence in the ambiguity band, NOT an overturn rate)")
+            if ap is not None:
+                print(f"  {name}: appeal overturn rate {ap:.3f} "
+                      f"(enforcement actions a human judged genuine)")
 
     run(test_rows, DEFAULT_PRIOR, "predictions_test.csv")
     run(probe_rows, PROBE_PRIOR, "predictions_probe.csv")
@@ -269,6 +272,7 @@ def main() -> None:
         "model_version": MODEL_VERSION,
         "baseline_version": BASELINE_VERSION,
         "baseline_threshold_tuned_on_fit": tuned,
+        "baseline_tuning_objective": "max F1 on the fit split",
         "fit_rows": len(fit_rows),
         "test_rows": len(test_rows),
         "probe_rows": len(probe_rows),

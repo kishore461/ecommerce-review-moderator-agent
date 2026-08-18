@@ -13,9 +13,9 @@ Section 8 of the brief asks for seven parts. They map onto this module as:
                volume
   Policy       FixedBandPolicy and ExpectedCostPolicy - the two policies the
                brief requires be compared
-  Feedback     record_outcome() - accepts a human verdict for cases that were
-               routed, and only for those cases. This is deliberately
-               one-sided; see the note on FeedbackLog.
+  Feedback     record_outcome() - accepts a human verdict for routed cases
+               (queue) and for enforcement actions (appeals). Permitted reviews
+               still generate nothing; see the note on FeedbackLog.
 
 HUMAN REASONING FUNCTION
 ------------------------
@@ -146,10 +146,15 @@ class LikelihoodTable:
         for name, n_levels in FEATURE_LEVELS.items():
             probs = [self.table[(State.GENUINE, name, lv)] for lv in range(n_levels)]
             if name == "generic_praise":
-                # shift mass toward heavier praise
-                probs = [probs[0] * 0.5, probs[1] * 1.0, probs[2] * 1.8][:n_levels]
+                # Shift mass toward heavier praise. Weights are generated for
+                # whatever number of levels the feature has, rather than being a
+                # hard-coded 3-element list: a fourth praise level would
+                # previously have raised IndexError (Gemini review, P2.2).
+                weights = [0.5 + 1.3 * (i / max(1, n_levels - 1))
+                           for i in range(n_levels)]
+                probs = [pr * w for pr, w in zip(probs, weights)]
                 total = sum(probs)
-                probs = [p / total for p in probs]
+                probs = [pr / total for pr in probs]
             for lv in range(n_levels):
                 self.table[(State.SOLICITED, name, lv)] = probs[lv]
 
@@ -337,9 +342,18 @@ class ExpectedCostPolicy(Policy):
                 belief.posterior.get(state, 0.0) * costs.cost(action, state)
                 for state in State
             )
-        best = min(expected, key=expected.get)
+        # Ties are broken explicitly toward the least destructive action rather
+        # than relying on dict insertion order, which previously decided them
+        # silently (Gemini review, P2.4). Order of preference on a tie:
+        # permit < route < flag < hide, i.e. prefer doing less.
+        DESTRUCTIVENESS = {Action.PERMIT: 0, Action.ROUTE: 1,
+                           Action.FLAG: 2, Action.HIDE: 3}
+        lowest = min(expected.values())
+        tied = [a for a in Action if abs(expected[a] - lowest) < 1e-12]
+        best = min(tied, key=lambda a: DESTRUCTIVENESS[a])
         detail = ", ".join(f"{a.value}={expected[a]:.3f}" for a in Action)
-        return best, f"argmin expected cost [{detail}]"
+        note = f" (tie among {len(tied)}, least destructive chosen)" if len(tied) > 1 else ""
+        return best, f"argmin expected cost [{detail}]{note}"
 
 
 # ---------------------------------------------------------------------------
@@ -348,32 +362,52 @@ class ExpectedCostPolicy(Policy):
 @dataclass
 class FeedbackLog:
     """
-    Feedback is only ever received for cases routed to a human.
+    Records whatever verdicts come back from a human.
 
-    A review that is permitted generates no signal at all: nobody comes back to
-    say a fake slipped through. This asymmetry was raised by u/galvinw in
-    r/learnmachinelearning and is recorded as a failure condition, not solved
-    here. The consequence is that the live overturn rate can only ever inform
-    the false-positive side of the model.
+    TWO SOURCES, NOT ONE. An earlier version only recorded verdicts for cases
+    routed to the queue. A reviewer pointed out that this discards the highest
+    fidelity signal a deployed system gets: a seller appealing an enforcement
+    action (Gemini practitioner review, finding 1). Appeals on FLAG and HIDE are
+    now recorded as well, tagged by source.
+
+    Reviews that are PERMITTED still generate nothing. Nobody comes back to say
+    a fake slipped through. That asymmetry was raised by u/galvinw in
+    r/learnmachinelearning and is a failure condition, not something solved here.
     """
     entries: list = field(default_factory=list)
 
-    def record_outcome(self, case_id: str, action: Action, human_verdict: State | None) -> None:
-        if action != Action.ROUTE:
-            return  # no observation available; this is the point
-        self.entries.append(
-            {"case_id": case_id, "action": action.value,
-             "human_verdict": human_verdict.value if human_verdict else None}
-        )
+    def record_outcome(self, case_id: str, action: Action,
+                       human_verdict: "State | None") -> None:
+        if action == Action.PERMIT or human_verdict is None:
+            return  # no observation is available; this is the point
+        source = "queue" if action == Action.ROUTE else "appeal"
+        self.entries.append({
+            "case_id": case_id, "action": action.value,
+            "source": source, "human_verdict": human_verdict.value,
+        })
 
-    def overturn_rate(self) -> float | None:
-        if not self.entries:
+    def genuine_rate_in_queue(self) -> "float | None":
+        """
+        Share of routed cases the human judged genuine.
+
+        NOT an overturn rate. The agent made no decision on a routed case, so
+        there is nothing to overturn - this measures the prevalence of genuine
+        reviews inside the agent's ambiguity band. It was previously named
+        `overturn_rate`, which was simply wrong (Gemini review, P2.7).
+        """
+        queued = [e for e in self.entries if e["source"] == "queue"]
+        if not queued:
             return None
-        judged = [e for e in self.entries if e["human_verdict"]]
-        if not judged:
+        return sum(1 for e in queued
+                   if e["human_verdict"] == State.GENUINE.value) / len(queued)
+
+    def appeal_overturn_rate(self) -> "float | None":
+        """Share of enforcement actions a human judged genuine: a true overturn."""
+        appeals = [e for e in self.entries if e["source"] == "appeal"]
+        if not appeals:
             return None
-        genuine = sum(1 for e in judged if e["human_verdict"] == State.GENUINE.value)
-        return genuine / len(judged)
+        return sum(1 for e in appeals
+                   if e["human_verdict"] == State.GENUINE.value) / len(appeals)
 
 
 # ---------------------------------------------------------------------------

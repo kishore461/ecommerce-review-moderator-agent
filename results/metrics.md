@@ -41,8 +41,8 @@ Expected calibration error: 0.145
 | System | TP | FP | TN | FN | Routed | Precision | Recall | Recall (routed in denom.) | Human review | Total cost | ECE |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline_keyword | 6 | 3 | 2 | 1 | 0 | 0.667 | 0.857 | 0.857 | 0.000 | 14.500 | - |
-| expected_cost | 2 | 0 | 5 | 4 | 1 | 1.000 | 0.333 | 0.286 | 0.083 | 15.000 | 0.210 |
-| fixed_band | 2 | 0 | 5 | 4 | 1 | 1.000 | 0.333 | 0.286 | 0.083 | 17.000 | 0.210 |
+| expected_cost | 2 | 0 | 5 | 4 | 1 | 1.000 | 0.333 | 0.286 | 0.083 | 15.000 | 0.211 |
+| fixed_band | 2 | 0 | 5 | 4 | 1 | 1.000 | 0.333 | 0.286 | 0.083 | 17.000 | 0.211 |
 
 **baseline_keyword** emits no probability, so it cannot be calibrated. That is a finding, not an omission.
 
@@ -50,22 +50,22 @@ Expected calibration error: 0.145
 
 | Belief bin | n | Mean predicted | Observed fake rate |
 |---|---|---|---|
-| [0.0,0.2) | 6 | 0.162 | 0.500 |
-| [0.2,0.4) | 3 | 0.302 | 0.333 |
+| [0.0,0.2) | 4 | 0.143 | 0.250 |
+| [0.2,0.4) | 5 | 0.258 | 0.600 |
 | [0.4,0.6) | 0 | - | - |
-| [0.6,0.8) | 1 | 0.622 | 1.000 |
+| [0.6,0.8) | 1 | 0.625 | 1.000 |
 | [0.8,1.0) | 2 | 0.990 | 1.000 |
 
-Expected calibration error: 0.210
+Expected calibration error: 0.211
 
 **fixed_band — reliability**
 
 | Belief bin | n | Mean predicted | Observed fake rate |
 |---|---|---|---|
-| [0.0,0.2) | 6 | 0.162 | 0.500 |
-| [0.2,0.4) | 3 | 0.302 | 0.333 |
+| [0.0,0.2) | 4 | 0.143 | 0.250 |
+| [0.2,0.4) | 5 | 0.258 | 0.600 |
 | [0.4,0.6) | 0 | - | - |
-| [0.6,0.8) | 1 | 0.622 | 1.000 |
+| [0.6,0.8) | 1 | 0.625 | 1.000 |
 | [0.8,1.0) | 2 | 0.990 | 1.000 |
 
-Expected calibration error: 0.210
+Expected calibration error: 0.211

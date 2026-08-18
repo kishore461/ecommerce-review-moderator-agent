@@ -1,8 +1,9 @@
 {
-  "generated_utc": "2026-08-18T08:19:14+00:00",
+  "generated_utc": "2026-08-18T14:34:50+00:00",
   "model_version": "agent-0.1.0",
   "baseline_version": "baseline-keyword-1.0",
   "baseline_threshold_tuned_on_fit": 1,
+  "baseline_tuning_objective": "max F1 on the fit split",
   "fit_rows": 6000,
   "test_rows": 40,
   "probe_rows": 12,

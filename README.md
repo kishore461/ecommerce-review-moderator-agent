@@ -59,7 +59,7 @@ file is not pinned by checksum - see limitation 16.
 | **Action** | `permit`, `flag_with_explanation`, `route_to_human`, `hide` |
 | **Cost** | Asymmetric, scaled by the business's total review volume (`CostModel`) |
 | **Policy** | `FixedBandPolicy` (A) and `ExpectedCostPolicy` (B) |
-| **Feedback** | `FeedbackLog` — records outcomes **only** for routed cases |
+| **Feedback** | `FeedbackLog` — routed cases (queue) and enforcement actions (appeals); permitted reviews still yield nothing |
 
 **Human reasoning function:** identify uncertainty, and send a high-cost
 decision to a human rather than guessing. Both policies can decline to decide.
@@ -81,7 +81,11 @@ r/Amazonsellercentral discussion.
 ### Baseline
 
 `src/baseline.py` — a flat keyword rule with no belief, no cost model, and no
-option to defer. Its threshold is tuned on the fit split, so it gets a fair run.
+option to defer. Its term-count threshold is tuned on the fit split to **maximise
+F1**; the tuned value and the objective are both recorded in
+`results/run_manifest.json`. It emits a count rather than a probability, so no
+calibration curve is reported — that count *could* be mapped to one, so the
+absence is a choice, not an impossibility.
 It exists to test a specific claim from r/learnmachinelearning: that
 LLM-generated keyword lists inflate false positives.
 
@@ -97,21 +101,25 @@ Held-out test set, 40 cases, 20 genuine and 20 fake.
 | fixed_band (A) | 0.933 | 0.778 | **0.700** | 1 | 4 | 15% | 42.0 | 0.145 |
 | expected_cost (B) | 0.929 | 0.867 | **0.650** | 1 | 2 | 27.5% | 31.0 | 0.145 |
 
-**Read the fourth column, not the third.** The confusion matrix excludes routed
-cases, but the baseline cannot route, so a policy is rewarded for declining while
-the baseline is not. Counting routed cases as "not acted on" is the like-for-like
-comparison — and under it **Policy A is more accurate than Policy B**, which
-reverses the ranking the third column suggests. B routes five fakes it could not
-classify; A routes two.
+**Both recall columns are legitimate and they measure different things.** The
+third excludes routed cases, which flatters a policy that declines: an agent
+routing 99% of its input and getting the last 1% right would score perfectly. The
+fourth counts routed cases as "not acted on", which penalises a policy for
+correctly identifying its own uncertainty — and the baseline cannot route at all,
+so only the fourth is like-for-like against it. Under the third, B leads
+(0.867 vs 0.778); under the fourth, **A leads (0.700 vs 0.650)**. An earlier
+version of this README told the reader to use the fourth and ignore the third;
+that was overstated, and both are now reported side by side.
 
 **The cost comparison is circular and should not be read as a result.** Policy B
 selects the action minimising expected cost under a given cost model, and is then
 scored with that same cost model. "B has lower total cost" is a property of
 argmin, not a finding.
 
-Both agent policies beat the baseline on the held-out set. **They do not beat it
-everywhere** — on the 12-case probe set the baseline has higher recall (0.857 vs
-0.333) and lower total cost. The probe set is designed to attack the agent's
+Both agent policies beat the baseline on the held-out set **on precision and
+recall** — not on cost, which is circular and excluded from that comparison.
+**They do not beat it everywhere** — on the 12-case probe set the baseline has
+higher recall (0.857 vs 0.333). The probe set is designed to attack the agent's
 assumptions, and it succeeds.
 
 **The agent is not well calibrated.** ECE 0.145. The 0.6–0.8 belief band predicts
@@ -195,6 +203,24 @@ These are material, and they qualify every number above.
     signal (log ratio ≈ 0.05).
 16. **The source dataset is not pinned.** No checksum or row count is recorded,
     so "reproduces every number exactly" holds only against the same download.
+17. **No dialect or demographic bias audit has been run.** The lexical channel is
+    a unigram model, and unigram filters in content moderation are known to
+    penalise non-standard dialects, ESL syntax and AAVE by scoring them as spam
+    or machine-generated. Two of the six features make this worse rather than
+    better: `length_band` treats brevity as evidence, and `specificity` rewards
+    a particular register of concrete detail. A writer with limited English who
+    leaves a short, plain review sits exactly where this model is most confident.
+    Nothing here has been tested for that, and it is the most consequential
+    untested risk in the project.
+18. **`solicited` never enters the main results.** Its prior is zero in
+    `DEFAULT_PRIOR`, so the main experiment is a two-state problem; the third
+    state appears only in the probe run, under a different prior. That different
+    prior is necessary — with zero prior mass the state can never be inferred —
+    but it means probe and test numbers are not directly comparable, and it is
+    recorded in `run_manifest.json` for that reason.
+19. **Ties in the expected-cost policy were previously broken by enum order.**
+    They are now broken explicitly toward the least destructive action and the
+    tie is noted in the decision reason.
 
 ---
 

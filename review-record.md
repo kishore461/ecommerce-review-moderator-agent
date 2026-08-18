@@ -26,9 +26,14 @@ the same model — and it is labelled as such below. It nevertheless found two c
 bugs and overturned the project's central ablation claim, which the three reviews
 above had missed entirely. Findings and fixes are in Review 4.
 
-**Still outstanding:** a review by a genuinely different assistant (ChatGPT,
-Gemini or Codex). Review 4 shows what fresh context alone can catch; it does not
-substitute for a different model.
+**Update — Reviews 5, 6 and 7 were run by Gemini**, a genuinely different model.
+All three review types were covered. Gemini found four things no Claude review
+had, including two code defects and the project's most serious untested risk. It
+also made three claims that did not survive checking against the code, which are
+recorded as rejections with evidence.
+
+**Nothing further outstanding for Section 11.** Two different models, four review
+passes, all three required review types.
 
 ---
 
@@ -167,3 +172,79 @@ knowledge of why each choice was made, did not see.
 | 16 limitations, 8 of them | 16 limitations, 8 new ones from this review. |
 
 **The lesson worth putting in the preprint:** three reviews written *with* knowledge of the design missed two code bugs that one review written *without* it found immediately. Context that helps you build is context that stops you seeing.
+
+
+---
+
+## Reviews 5–7 — Gemini (a genuinely different model)
+
+**Tool:** Gemini. Given `README.md`, `results/metrics.md`, `results/ablation.md`,
+`src/agent.py`, `src/lexical.py` and `decisions/probability-decision-record.md`,
+with the same hostile framing and an explicit instruction not to repeat any
+limitation the README already admits.
+
+Its tone is combative ("delusional", "academic malpractice", "structurally
+unpublishable"). That is the prompt working as intended and is not evidence of
+severity either way — several of its harshest findings are the ones that failed
+verification.
+
+### Review 5 — Practitioner (Section 11.1)
+
+| AI tool | Review comment | Accept / reject | Reason | Change | Evidence |
+|---|---|---|---|---|---|
+| Gemini | **Appeals are structurally ignored.** `record_outcome` returns early unless the action was ROUTE, so verdicts on HIDE and FLAG are dropped. In deployment a seller appealing a takedown is the highest-fidelity error signal available. | **Accept — best finding of this pass** | Verified. Limitation 13 admitted that *permitted* reviews give no signal; nobody noticed that *enforced* ones give none either. The model would repeat false positives against the same seller indefinitely. | `FeedbackLog` rewritten: records verdicts for queue **and** appeals, tagged by source. New `appeal_overturn_rate()`. | `src/agent.py: FeedbackLog`. New output: expected_cost appeal overturn rate **0.071** — 7.1% of its enforcement actions were against genuine reviews. |
+| Gemini | `cost(HIDE \| FAKE) = 0.0` treats a successful takedown as free, ignoring compute, DSA transparency retention, and accelerated adversarial mutation. | **Accept** | Correct, and mechanically important: that zero is part of why Policy B hides everything. | Documented. Cost matrix **not** retuned — changing it after seeing which policy won would be fitting to the outcome, the same reasoning applied to review 4's finding on flag dominance. | `src/agent.py: CostModel.cost`, `State.FAKE` branch. |
+| Gemini | The cost matrix says flagging a solicited review (1.5v) costs less than flagging a genuine one (2.0v). Wrongly enforcing against an owner's family member causes *more* support friction, because they can personally verify the reviewer. | **Accept, with a correction to the reasoning** | The ordering question is real but the diagnosis is half right. The matrix was measuring **harm to the platform's information quality**; Gemini is measuring **operational support cost**. Those are different quantities and the matrix never says which it represents. That ambiguity is the finding. | Documented as an open modelling question. Not retuned. | `src/agent.py: CostModel.cost`, `State.SOLICITED` branch. |
+| Gemini | A static 0.50–0.84 band is a denial-of-service surface: an adversary who writes to land inside the ambiguity zone can flood the human queue at will. | **Partial accept** | The "27.5% is unworkable at scale" half is already Review 1 and limitation 8. The *adversarial* half is new and good — it connects directly to the r/trustandsafetypros thread on threshold gaming. | Adversarial queue-flooding added to the future-work questions. | `results/ablation.md` base-rate table; `discussion-record.md` r/trustandsafetypros row. |
+| Gemini | The prior is global, but base rates differ by product category. | **Partial accept** | The base-rate problem is limitation 7. The *category* dimension is new, and sharper than Gemini realised: the dataset has a `category` column the agent never reads, while the lexical channel is already memorising category vocabulary. So the model is implicitly category-sensitive without being explicitly category-aware. | Recorded as future work alongside the category-held-out evaluation. | `results/lexical_top_words.md` (`schlage`, `taurus`, `sneaker`); `data/test_set.csv` has an unused `category` column. |
+
+### Review 6 — Probability (Section 11.2)
+
+| AI tool | Review comment | Accept / reject | Reason | Change | Evidence |
+|---|---|---|---|---|---|
+| Gemini | **The worked Bayes arithmetic in the decision record does not reproduce.** `0.00353 / 0.01243` is 0.28399, not the 0.2844 printed beneath it. | **Accept** | Verified. The displayed intermediates were rounded to five decimals while the displayed *results* came from unrounded computation, so a reader checking by hand gets different numbers. Gemini's charge of "faking the division to make it sum to 1.0" is wrong — the values were always right — but the presentation was not reproducible, which in a document about auditable reasoning is the whole point. | Decision record now prints six-decimal priors and eight-decimal intermediates, so the shown arithmetic reproduces the shown result exactly. | `decisions/probability-decision-record.md` §4. |
+| Gemini | **Latent `IndexError` in `_derive_solicited`.** The praise re-weighting is a hard-coded three-element list sliced by `[:n_levels]`; a fourth praise level would truncate to three and then crash on `lv=3`. | **Accept** | Verified by inspection. Not reachable today, but it is a trap left for the next person. | Weights are now generated for whatever `n_levels` the feature has. | `src/agent.py: _derive_solicited`. |
+| Gemini | **Ties in `ExpectedCostPolicy` are broken silently by enum order**, defaulting to PERMIT. | **Accept, disputing the framing** | Verified: `min()` returns the first minimum in insertion order, which is PERMIT. Gemini calls this "defaulting to maximum risk"; under this cost model permitting is the *least* destructive action, so the default was benign. Undocumented implicit behaviour is still a defect. | Ties now broken explicitly toward the least destructive action, and the decision reason states when a tie occurred. Recorded as limitation 19. | `src/agent.py: ExpectedCostPolicy.decide`. |
+| Gemini | The "overturn rate" is misnamed. A routed case is one the agent refused to decide, so there is nothing to overturn — the metric measures the prevalence of genuine reviews inside the ambiguity band. | **Accept** | Correct, and it compounds review 4's finding that ground truth was being fed in as the human verdict. | Renamed `genuine_rate_in_queue()`, with a docstring saying what it is not. A real `appeal_overturn_rate()` now exists alongside it. | `src/agent.py: FeedbackLog`. |
+| Gemini | "The baseline emits no probability, so it cannot be calibrated" is inconsistent with claiming its threshold was tuned. A term count can be mapped to a probability. | **Accept** | Fair. The count is a score; declining to calibrate it is a choice, not an impossibility. | README reworded: no calibration curve is reported, and the absence is a choice. Tuning objective (max F1) now stated in the README and the manifest. | `README.md` baseline section; `run_manifest.json: baseline_tuning_objective`. |
+| Gemini | **The ECE is incoherent** because `p_not_genuine` pools FAKE and SOLICITED but the data has no solicited examples. | **Reject — verified false** | On the main run `DEFAULT_PRIOR` assigns `solicited` a prior of **0.0**, and `update_belief` skips any state with zero prior mass. The posterior on the held-out set contains only `genuine` and `fake`, so nothing is pooled and the comparison is strictly binary. Gemini inferred the flaw from the class definition without checking the prior. | None. | Verified directly: posterior keys on the main run are `['genuine', 'fake']`. |
+| Gemini | **"Changing priors to manipulate probe set results"** — using `PROBE_PRIOR` instead of `DEFAULT_PRIOR` invalidates the comparison. | **Reject — verified false, and backwards** | `DEFAULT_PRIOR` gives `solicited` zero mass, so under it the agent could *never* infer a solicited review, and five of the twelve probe cases are solicited. A non-zero prior is a precondition for the probe set testing anything at all. The prior is documented in the manifest and in the code. And the probe results are *worse* than the main results (recall 0.333 vs 0.867) — an odd outcome for manipulation intended to flatter. | None. The non-comparability of probe and test numbers is now stated as limitation 18. | `run_manifest.json: prior_probe`; `results/metrics.md` probe section. |
+| Gemini | At scale the volume factor makes hiding a genuine review 100× cheaper than a human check. | **Reject — already admitted** | This is limitation 7 and review 4's volume sweep, both of which predate this review. The instruction was explicitly not to repeat admitted limitations. | None. | `results/ablation.md`, cost-model sweep: at 20,000 reviews Policy B routes 0 and hides 27. |
+
+### Review 7 — Preprint (Section 11.3)
+
+| AI tool | Review comment | Accept / reject | Reason | Change | Evidence |
+|---|---|---|---|---|---|
+| Gemini | **No dialect or demographic bias audit.** Unigram moderation filters are known to penalise AAVE, ESL syntax and non-standard dialects by scoring them as spam or machine-generated. | **Accept — the most important finding in the entire record** | Not admitted anywhere, and worse than Gemini realised. Two of the six features actively compound it: `length_band` treats brevity as evidence, and `specificity` rewards one particular register of concrete detail. A writer with limited English leaving a short plain review sits exactly where this model is most confident — and the corrected ablation shows the lexical channel is doing essentially all the deciding. | Added as limitation 17 and flagged as the project's most consequential untested risk. A dialect-stratified evaluation is now the top ethics item for the preprint. | `src/lexical.py`; `src/features.py` `length_band` and `specificity`; `results/ablation.md`. |
+| Gemini | The baseline's tuning objective is undocumented, so the baseline is irreproducible. | **Accept** | The objective (max F1) was in the `tune()` docstring but nowhere a reader would look. | Stated in the README and written into `run_manifest.json`. | `src/baseline.py: KeywordBaseline.tune`; `run_manifest.json`. |
+| Gemini | **The duplicate-evidence step breaks the project's own core constraint.** Finding a verbatim duplicate on another listing needs a cross-listing index, which the agent does not have. | **Accept** | Correct, and the original wording explicitly claimed the opposite — that the evidence "stays inside the agent's constraint because it is derived from text". Detecting duplication is a capability, not an observation. | The claim is withdrawn in the decision record, which now states that the section demonstrates what *would* change the belief if the capability existed, not something this agent can observe. | `decisions/probability-decision-record.md` §2. |
+| Gemini | Contradiction: the cost metric is declared circular, then used to claim superiority over the baseline. | **Partial accept** | Not a contradiction — the "beats the baseline" claim rests on precision and recall, not cost. But the sentence did not say so, and a hostile reader is entitled to the reading Gemini took. | Reworded to name the measures: beats the baseline **on precision and recall**, cost excluded as circular. | `README.md` results section. |
+| Gemini | ECE reported to three decimals on N=40 with bins of 4, 1 and 5 cases is meaningless. | **Reject — already admitted** | The README already states that the 0.6–0.8 bin holds five cases and that the figure is indicative rather than established, and bin counts are printed beside every reliability table for exactly this reason. | None. | `README.md` results section; `results/metrics.md` reliability tables include `n`. |
+| Gemini | The baseline is treated unfairly because the agent may defer and the baseline may not. | **Reject — already addressed** | This is review 4's finding, already fixed: `metrics.md` reports recall with routed cases in the denominator precisely so the comparison is like-for-like. | None. | `results/metrics.md`, fourth column. |
+| Gemini | **"The single claim most likely to be attacked":** telling the reader to use a denominator that *excludes* routed cases is survivorship bias — a policy routing 99% and getting the last 1% right would score perfectly. | **Reject on the specific claim, accept the underlying point** | Gemini misread the README, which tells the reader to use the denominator that **includes** routed cases — the opposite of what it describes, and its own survivorship argument is the argument *for* the column it thinks is being hidden. But the underlying point stands: both denominators are defensible and the README should not have told the reader to prefer one. | Rewritten to present both columns as measuring different things, with the failure mode of each stated. | `README.md` results section. |
+
+### What Gemini changed
+
+| Before | After |
+|---|---|
+| Feedback recorded for routed cases only | Appeals recorded too; new metric shows **7.1%** of Policy B's enforcement actions hit genuine reviews |
+| Worked Bayes arithmetic did not reproduce by hand | Full precision shown; a reader can now check it |
+| Ties broken silently by enum ordering | Broken explicitly toward the least destructive action, and logged |
+| "overturn rate" | `genuine_rate_in_queue()` — it was never an overturn rate |
+| Duplicate evidence "stays inside the constraint" | Claim withdrawn; it requires a capability the agent lacks |
+| "Read the fourth column, not the third" | Both denominators presented, with the failure mode of each |
+| 16 limitations | 19, including the dialect-bias risk |
+| Latent `IndexError` on config change | Fixed |
+
+**Three of Gemini's harshest claims failed verification** — the incoherent-ECE
+claim, the prior-manipulation accusation, and the survivorship-bias reading, the
+last of which argued for the very column it believed was being concealed. All
+three are recorded as rejections with the evidence that refutes them, because a
+rejection that can be checked is worth as much to this record as an acceptance.
+
+**What the two models caught differently.** Claude, reviewing its own work, found
+architectural and statistical problems — double counting, circular cost scoring,
+the ablation bug. Gemini found the things a different training distribution
+notices: an ethics risk around dialect, a latent crash, a misnamed metric, and a
+constraint violation hidden inside a narrative. Neither set subsumes the other,
+which is the actual argument for using more than one tool.

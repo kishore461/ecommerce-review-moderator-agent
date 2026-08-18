@@ -81,22 +81,22 @@ I liked the ending. I l...
 
 ### SOLICITED-INVISIBLE: real visit, true detail, not independent (5)
 
-- **P000** · fixed_band · true state `solicited` · rating 5.0 · action `permit` · P(not genuine) 0.188216
+- **P000** · fixed_band · true state `solicited` · rating 5.0 · action `permit` · P(not genuine) 0.201819
   > Ordered the ribeye for my brother-in-law's opening night. Came out at a perfect medium rare and the kitchen sent out extra bread when they saw we were waiting. Been going since they opened in March.
-- **P000** · expected_cost · true state `solicited` · rating 5.0 · action `permit` · P(not genuine) 0.188216
+- **P000** · expected_cost · true state `solicited` · rating 5.0 · action `permit` · P(not genuine) 0.201819
   > Ordered the ribeye for my brother-in-law's opening night. Came out at a perfect medium rare and the kitchen sent out extra bread when they saw we were waiting. Been going since they opened in March.
 - **P001** · baseline_keyword · true state `solicited` · rating 5.0 · action `permit` · P(not genuine) n/a
   > My sister runs the front of house here and I eat here most Fridays. The carbonara is genuinely good, and they fixed the noise problem by adding panels to the back wall about two months ago.
-- **P001** · fixed_band · true state `solicited` · rating 5.0 · action `permit` · P(not genuine) 0.105644
+- **P001** · fixed_band · true state `solicited` · rating 5.0 · action `permit` · P(not genuine) 0.101282
   > My sister runs the front of house here and I eat here most Fridays. The carbonara is genuinely good, and they fixed the noise problem by adding panels to the back wall about two months ago.
-- **P001** · expected_cost · true state `solicited` · rating 5.0 · action `permit` · P(not genuine) 0.105644
+- **P001** · expected_cost · true state `solicited` · rating 5.0 · action `permit` · P(not genuine) 0.101282
   > My sister runs the front of house here and I eat here most Fridays. The carbonara is genuinely good, and they fixed the noise problem by adding panels to the back wall about two months ago.
 
 ### SPECIFICITY-HARVESTED: concrete detail copied from the page (2)
 
-- **P002** · fixed_band · true state `fake` · rating 5.0 · action `permit` · P(not genuine) 0.303729
+- **P002** · fixed_band · true state `fake` · rating 5.0 · action `permit` · P(not genuine) 0.294126
   > The lifetime sharpening on the custom knives is a great value and the craftsmanship is on another level. Worth every penny. Ask for the flagship model.
-- **P002** · expected_cost · true state `fake` · rating 5.0 · action `permit` · P(not genuine) 0.303729
+- **P002** · expected_cost · true state `fake` · rating 5.0 · action `permit` · P(not genuine) 0.294126
   > The lifetime sharpening on the custom knives is a great value and the craftsmanship is on another level. Worth every penny. Ask for the flagship model.
 
 ### SARCASM-INVERTED: polarity contradicts the rating (2)
@@ -108,9 +108,9 @@ I liked the ending. I l...
 
 ### VAGUE-NEGATIVE-FAKE: emotional one star, no detail (2)
 
-- **P011** · fixed_band · true state `fake` · rating 1.0 · action `permit` · P(not genuine) 0.196337
+- **P011** · fixed_band · true state `fake` · rating 1.0 · action `permit` · P(not genuine) 0.209671
   > Do not waste your money here. Worst place in town. Absolutely terrible, never going back.
-- **P011** · expected_cost · true state `fake` · rating 1.0 · action `permit` · P(not genuine) 0.196337
+- **P011** · expected_cost · true state `fake` · rating 1.0 · action `permit` · P(not genuine) 0.209671
   > Do not waste your money here. Worst place in town. Absolutely terrible, never going back.
 
 ### TERSE-GENUINE: a real reviewer who wrote almost nothing (1)

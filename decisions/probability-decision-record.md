@@ -85,11 +85,21 @@ Carried forward from the decision above:
 **The identical review text is found verbatim on a different business's
 listing.**
 
-This evidence was chosen because it stays inside the agent's constraint — it is
-derived from text alone, requiring no account age, no purchase record and no
-reviewer history. It is also the mechanism u/XxLogitech98xX described in the
-same thread: people copy text from other listings, and he had seen a Yelp Elite
-reuse other people's photos the same way.
+**This evidence is outside the agent's stated observation set, and that has to be
+said plainly.** The original wording claimed it "stays inside the constraint"
+because it is derived from text. A reviewer pointed out that this is wrong:
+detecting a verbatim duplicate on another listing requires a cross-listing index
+and a database lookup, which the agent as built has no access to (Gemini preprint
+review, finding 5). The claim has been withdrawn.
+
+What this section therefore demonstrates is *what would change the belief if the
+capability existed*, not something this agent can currently observe. That is
+still a legitimate use of a decision record — the brief asks what new evidence
+would do — but it is a hypothetical extension, not a property of the system.
+
+The mechanism itself is real: u/XxLogitech98xX described people copying text from
+other listings, and had seen a Yelp Elite reuse other people's photos the same
+way.
 
 ### 3. Likelihood of that evidence under each state
 
@@ -114,16 +124,26 @@ one review for one business has little reason to copy, so it sits between.
 Bayes, worked explicitly at the central setting so it can be checked by hand:
 
 ```
-unnormalised(genuine)   = 0.7069 × 0.005 = 0.00353
-unnormalised(fake)      = 0.0092 × 0.350 = 0.00322
-unnormalised(solicited) = 0.2840 × 0.020 = 0.00568
-                                    sum  = 0.01243
+prior(genuine)   = 0.706864
+prior(fake)      = 0.009178
+prior(solicited) = 0.283958
 
-posterior(genuine)   = 0.00353 / 0.01243 = 0.2844
-posterior(fake)      = 0.00322 / 0.01243 = 0.2585
-posterior(solicited) = 0.00568 / 0.01243 = 0.4571
-                                     sum  = 1.0000
+unnormalised(genuine)   = 0.706864 × 0.005 = 0.00353432
+unnormalised(fake)      = 0.009178 × 0.350 = 0.00321220
+unnormalised(solicited) = 0.283958 × 0.020 = 0.00567916
+                                       sum = 0.01242568
+
+posterior(genuine)   = 0.00353432 / 0.01242568 = 0.28444
+posterior(fake)      = 0.00321220 / 0.01242568 = 0.25851
+posterior(solicited) = 0.00567916 / 0.01242568 = 0.45705
+                                          sum  = 1.00000
 ```
+
+Full precision is shown deliberately. An earlier version of this record printed
+the intermediates rounded to five decimal places and then displayed the division
+of the *unrounded* values, so the arithmetic as written did not reproduce the
+result beneath it (Gemini probability review, finding 1). The values were never
+wrong; the presentation was.
 
 | State | Prior | Posterior (central) |
 |---|---|---|
