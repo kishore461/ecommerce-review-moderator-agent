@@ -28,6 +28,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
 from agent import Action, State, CostModel  # noqa: E402
+from features import extract  # noqa: E402
 
 RESULTS = os.path.join(ROOT, "results")
 TOTAL_REVIEWS_ASSUMED = 200
@@ -51,11 +52,12 @@ def confusion(rows: list[dict]) -> dict:
     did not make a decision on them - that is the point of the queue.
     """
     tp = fp = tn = fn = 0
-    routed = 0
+    routed = routed_positive = 0
     for r in rows:
         truth_not_genuine = r["true_state"] != "genuine"
         if r["action"] == Action.ROUTE.value:
             routed += 1
+            routed_positive += 1 if truth_not_genuine else 0
             continue
         acted = r["action"] in ACTING
         if acted and truth_not_genuine:
@@ -66,7 +68,8 @@ def confusion(rows: list[dict]) -> dict:
             fn += 1
         else:
             tn += 1
-    return {"tp": tp, "fp": fp, "tn": tn, "fn": fn, "routed": routed}
+    return {"tp": tp, "fp": fp, "tn": tn, "fn": fn, "routed": routed,
+            "routed_positive": routed_positive}
 
 
 def rates(cm: dict, n_total: int) -> dict:
@@ -76,7 +79,15 @@ def rates(cm: dict, n_total: int) -> dict:
     f1 = (2 * precision * recall / (precision + recall)
           if precision and recall else None)
     decided = tp + fp + tn + fn
+    routed = cm["routed"]
+    # Finding 9 (review 4): the confusion matrix drops routed cases, but the
+    # baseline structurally cannot route. Comparing a policy that may decline
+    # against one that cannot, on a denominator that shrinks when it declines,
+    # flatters the policy. Recall is therefore also reported with routed cases
+    # counted as "not acted on", which is the like-for-like figure.
+    recall_incl = tp / (tp + fn + cm.get("routed_positive", 0)) if (tp + fn + cm.get("routed_positive", 0)) else None
     return {
+        "recall_routed_in_denominator": recall_incl,
         "precision": precision,
         "recall": recall,
         "f1": f1,
@@ -127,7 +138,13 @@ def calibration(rows: list[dict], bins=(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)) -> dict:
 # Failure conditions
 # ---------------------------------------------------------------------------
 def name_failure(row: dict) -> str:
-    """Give each incorrect decision a named failure condition."""
+    """
+    Give each incorrect decision a named failure condition.
+
+    Finding 11 (review 4): an earlier version of this function branched on the
+    star rating alone, so long, highly specific reviews were printed under
+    "wrote almost nothing". It now reads the same features the agent read.
+    """
     truth_not_genuine = row["true_state"] != "genuine"
     acted = row["action"] in ACTING
     kind = row.get("probe_kind") or ""
@@ -143,14 +160,20 @@ def name_failure(row: dict) -> str:
             "vague_negative_fake": "VAGUE-NEGATIVE-FAKE: emotional one star, no detail",
         }.get(kind, f"PROBE-{kind.upper()}")
 
+    f = extract(row["text"], float(row["rating"])).as_dict()
+
     if acted and not truth_not_genuine:
-        if float(row["rating"]) >= 4:
-            return "GENERIC-PRAISE-COLLISION: a genuine happy customer who wrote nothing specific"
-        return "TERSE-GENUINE: a real reviewer who wrote almost nothing"
+        if f["length_band"] <= 1 and f["specificity"] == 0:
+            return "TERSE-GENUINE: short, names nothing checkable, and still real"
+        if f["generic_praise"] >= 1 and f["specificity"] <= 1:
+            return "GENERIC-PRAISE-COLLISION: a real customer who wrote in stock phrases"
+        return "SPECIFIC-GENUINE-FLAGGED: detailed real review acted on anyway"
     if not acted and truth_not_genuine:
-        if float(row["rating"]) >= 4:
-            return "FLUENT-FAKE: machine text that reads like an ordinary short review"
-        return "NEGATIVE-FAKE-MISSED: a hostile fake that resembles a real complaint"
+        if f["specificity"] >= 2:
+            return "DETAILED-FAKE: fabricated text carrying concrete detail"
+        if f["length_band"] >= 2:
+            return "FLUENT-FAKE: long, fluent machine text with no checkable content"
+        return "SHORT-FAKE-MISSED: too little text to separate from a real short review"
     return "UNCLASSIFIED"
 
 
@@ -199,14 +222,14 @@ def to_markdown(reports: list[dict], costs: CostModel) -> str:
     for rep in reports:
         lines += [f"## {rep['set']} ({rep['n_cases']} cases)", "",
                   "| System | TP | FP | TN | FN | Routed | Precision | Recall | "
-                  "F1 | Human review | Total cost | ECE |",
+                  "Recall (routed in denom.) | Human review | Total cost | ECE |",
                   "|---|---|---|---|---|---|---|---|---|---|---|---|"]
         for name, m in rep["systems"].items():
             cm = m["confusion_matrix"]
             lines.append(
                 f"| {name} | {cm['tp']} | {cm['fp']} | {cm['tn']} | {cm['fn']} | "
                 f"{cm['routed']} | {fmt(m['precision'])} | {fmt(m['recall'])} | "
-                f"{fmt(m['f1'])} | {fmt(m['human_review_rate'])} | "
+                f"{fmt(m['recall_routed_in_denominator'])} | {fmt(m['human_review_rate'])} | "
                 f"{fmt(m['total_decision_cost'])} | {fmt(m['calibration'].get('ece'))} |"
             )
         lines.append("")
@@ -255,16 +278,21 @@ def highest_cost_section(failures: list[dict], costs: CostModel) -> list[str]:
              "| Error type | Count | Cost each | Total |", "|---|---|---|---|"]
     for key, cs in sorted(by_kind.items(), key=lambda kv: -sum(kv[1])):
         lines.append(f"| {key} | {len(cs)} | {cs[0]:.2f} | {sum(cs):.2f} |")
-    lines += ["", "**Why this error costs the most.** Hiding a genuine review is the "
-              "only action that removes a real customer's words while giving the "
-              "seller no route to contest it, and its cost is multiplied by the "
-              "volume factor, so a shop with few reviews absorbs nearly the whole "
-              "penalty. Permitting a fake is diffuse and shared across many buyers; "
-              "hiding a genuine review is concentrated on one business and one "
-              "customer at once. This asymmetry is why the fixed-band policy was "
-              "restricted to flag-with-explanation after the r/Amazonsellercentral "
-              "discussion, and it is the clearest argument against letting the "
-              "expected-cost policy select `hide` at all.", ""]
+    top_type, top_costs = max(by_kind.items(), key=lambda kv: sum(kv[1]))
+    lines += ["",
+              f"**Per-decision, the most expensive single error is "
+              f"`{worst['action']}` on a `{worst['true_state']}` review at "
+              f"{worst_cost:.2f} units.** In aggregate the largest contributor is "
+              f"different: *{top_type}*, {len(top_costs)} occurrences totalling "
+              f"{sum(top_costs):.2f} units. Both readings matter and they do not "
+              "agree - a rare catastrophic error and a common cheap one can carry "
+              "similar totals, which is exactly what the cost model is for.", "",
+              "Hiding a genuine review is the worst *single* decision because it "
+              "removes a real customer's words with no route to contest, and its "
+              "cost is scaled by the volume factor so a small shop absorbs almost "
+              "all of it. Permitting a fake is cheaper per case but far more "
+              "frequent. Note this table pools all systems and both datasets; it is "
+              "not a per-system cost.", ""]
     return lines
 
 

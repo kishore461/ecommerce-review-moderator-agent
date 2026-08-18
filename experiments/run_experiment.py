@@ -55,6 +55,134 @@ def fit_likelihoods(fit_rows: list[dict]) -> LikelihoodTable:
     return LikelihoodTable().fit(pairs)
 
 
+def write_ablation(test_rows, lt, lex, costs) -> None:
+    """
+    Two checks added in response to the AI reviews (see review-record.md).
+
+    ABLATION - do the six hand-designed features contribute anything, or is the
+    lexical channel doing all the work? Answered by running the agent with each
+    channel removed in turn.
+
+    BASE RATE - the main experiment runs at a 50% fake prior because that is the
+    test sample's own balance. Real base rates are far lower and unknown. This
+    sweeps the prior to show how far the headline numbers travel.
+    """
+    from agent import update_belief, Belief  # noqa: PLC0415
+    ACTING = {Action.FLAG.value, Action.HIDE.value}
+
+    def score(prior, use_lex, use_feats, policy, cost_model=None):
+        tp = fp = tn = fn = routed = 0
+        for r in test_rows:
+            f = extract(r["text"], float(r["rating"]))
+            b = update_belief(f, lt, prior, lexical=(lex if use_lex else None),
+                              text=r["text"], use_features=use_feats)
+            a, _ = policy.decide(b, cost_model or costs)
+            truth = r["true_state"] != "genuine"
+            if a == Action.ROUTE:
+                routed += 1
+                continue
+            acted = a.value in ACTING
+            if acted and truth:
+                tp += 1
+            elif acted and not truth:
+                fp += 1
+            elif not acted and truth:
+                fn += 1
+            else:
+                tn += 1
+        p = tp / (tp + fp) if tp + fp else None
+        rec = tp / (tp + fn) if tp + fn else None
+        return tp, fp, tn, fn, routed, p, rec
+
+    def fmt(x):
+        return "-" if x is None else f"{x:.3f}"
+
+    lines = ["# Ablation and base-rate sensitivity", "",
+             "Both checks were added after the AI reviews in `review-record.md`.", "",
+             "## Do the six hand-designed features contribute anything?", "",
+             "| Channels | Policy | TP | FP | TN | FN | Routed | Precision | Recall |",
+             "|---|---|---|---|---|---|---|---|---|"]
+    balanced = {State.GENUINE: 0.5, State.FAKE: 0.5, State.SOLICITED: 0.0}
+    results_index, base_index = {}, {}
+    for label, (ul, uf) in {"features + lexical": (True, True),
+                            "lexical only": (True, False),
+                            "features only": (False, True)}.items():
+        for pol in (FixedBandPolicy(), ExpectedCostPolicy()):
+            row = score(balanced, ul, uf, pol)
+            results_index[(label, pol.name)] = row
+            tp, fp, tn, fn, rt, p, rec = row
+            lines.append(f"| {label} | {pol.name} | {tp} | {fp} | {tn} | {fn} | "
+                         f"{rt} | {fmt(p)} | {fmt(rec)} |")
+    fb_full = results_index[("features + lexical", "fixed_band")]
+    fb_lex = results_index[("lexical only", "fixed_band")]
+    ec_full = results_index[("features + lexical", "expected_cost")]
+    ec_lex = results_index[("lexical only", "expected_cost")]
+    feat_only = [v for k, v in results_index.items() if k[0] == "features only"]
+    feat_recalls = [v[6] for v in feat_only if v[6] is not None]
+    lines += ["",
+              "**Reading (computed from the table above, not asserted).** "
+              f"With the feature terms genuinely omitted, the lexical channel alone "
+              f"reaches recall {fmt(fb_lex[6])} (fixed band) and {fmt(ec_lex[6])} "
+              f"(expected cost), against {fmt(fb_full[6])} and {fmt(ec_full[6])} for "
+              "the full system. Features alone reach recall "
+              f"{', '.join(fmt(r) for r in feat_recalls) or 'n/a'}. "
+              "Read the deltas rather than any sentence written in advance.",
+              ""]
+    lines += [              "", "## How far do the headline numbers travel?", "",
+              "| Prior P(fake) | Policy | TP | FP | TN | FN | Routed | Precision | Recall |",
+              "|---|---|---|---|---|---|---|---|---|"]
+    for pf in (0.5, 0.3, 0.1, 0.05):
+        prior = {State.GENUINE: 1 - pf, State.FAKE: pf, State.SOLICITED: 0.0}
+        for pol in (FixedBandPolicy(), ExpectedCostPolicy()):
+            row = score(prior, True, True, pol)
+            base_index[(pf, pol.name)] = row
+            tp, fp, tn, fn, rt, p, rec = row
+            lines.append(f"| {pf} | {pol.name} | {tp} | {fp} | {tn} | {fn} | "
+                         f"{rt} | {fmt(p)} | {fmt(rec)} |")
+    lo = base_index[(0.1, "fixed_band")]
+    hi = base_index[(0.5, "fixed_band")]
+    lo_ec = base_index[(0.1, "expected_cost")]
+    hi_ec = base_index[(0.5, "expected_cost")]
+    lines += ["",
+              "**Reading (computed).** Moving the prior from 0.5 to 0.1 changes "
+              f"fixed-band recall {fmt(hi[6])} -> {fmt(lo[6])} and expected-cost "
+              f"recall {fmt(hi_ec[6])} -> {fmt(lo_ec[6])}. The headline figures are "
+              "conditional on a 50% base rate that no deployment would have.", ""]
+
+    # --- volume factor sweep: the one cost parameter the cost model calls
+    # --- evidence-based, and the one never previously varied.
+    lines += ["## How far does the cost model travel?", "",
+              "`total_reviews` sets the volume factor. Only 200 was ever reported.", "",
+              "| total_reviews | volume factor | Policy | permit | flag | route | hide | genuine hidden |",
+              "|---|---|---|---|---|---|---|---|"]
+    for tr in (200, 1000, 5000, 20000):
+        cm = CostModel(total_reviews=tr)
+        for pol in (FixedBandPolicy(), ExpectedCostPolicy()):
+            counts = {a.value: 0 for a in Action}
+            genuine_hidden = 0
+            for r in test_rows:
+                f = extract(r["text"], float(r["rating"]))
+                b = update_belief(f, lt, balanced, lexical=lex, text=r["text"])
+                a, _ = pol.decide(b, cm)
+                counts[a.value] += 1
+                if a == Action.HIDE and r["true_state"] == "genuine":
+                    genuine_hidden += 1
+            lines.append(
+                f"| {tr} | {cm.volume_factor:.2f} | {pol.name} | {counts['permit']} | "
+                f"{counts['flag_with_explanation']} | {counts['route_to_human']} | "
+                f"{counts['hide']} | {genuine_hidden} |")
+    lines += ["",
+              "**Reading (computed).** The volume factor divides the cost of acting "
+              "wrongly against a genuine review but not the cost of routing, so as a "
+              "seller's review count rises, hiding gets cheaper while human review "
+              "stays at 1.0. The reported configuration (200 reviews) is the most "
+              "conservative point in this range, and that was not previously stated.",
+              ""]
+    with open(os.path.join(RESULTS, "ablation.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    print("ablation.md written")
+
+
 def main() -> None:
     os.makedirs(RESULTS, exist_ok=True)
 
@@ -78,10 +206,8 @@ def main() -> None:
                 f.write(f"| {w} | {s:+.3f} |\n")
             f.write("\n")
 
-    # Baseline threshold is tuned on the fit split only.
     baseline = KeywordBaseline()
     tuned = baseline.tune([(r["text"], r["true_state"] != "genuine") for r in fit_rows])
-
     costs = CostModel(total_reviews=TOTAL_REVIEWS_ASSUMED)
 
     def run(rows: list[dict], prior: dict, out_name: str) -> None:
@@ -92,7 +218,6 @@ def main() -> None:
         records = []
         for r in rows:
             cid, text, rating = r["case_id"], r["text"], float(r["rating"])
-
             b = baseline.decide(cid, text, rating)
             records.append({
                 "case_id": cid, "system": "baseline_keyword",
@@ -103,7 +228,6 @@ def main() -> None:
                 "rating": rating, "probe_kind": r.get("probe_kind", ""),
                 "text": text,
             })
-
             for name, ag in agents.items():
                 d = ag.decide(cid, text, rating)
                 ag.feedback.record_outcome(
@@ -122,7 +246,6 @@ def main() -> None:
                     "rating": rating, "probe_kind": r.get("probe_kind", ""),
                     "text": text,
                 })
-
         fields = ["case_id", "system", "policy_version", "action", "p_not_genuine",
                   "belief_genuine", "belief_fake", "belief_solicited",
                   "true_state", "rating", "probe_kind", "reason", "text"]
@@ -131,7 +254,6 @@ def main() -> None:
             w.writeheader()
             w.writerows(records)
         print(f"{out_name}: {len(records)} decisions over {len(rows)} cases")
-
         for name, ag in agents.items():
             rate = ag.feedback.overturn_rate()
             if rate is not None:
@@ -140,6 +262,7 @@ def main() -> None:
 
     run(test_rows, DEFAULT_PRIOR, "predictions_test.csv")
     run(probe_rows, PROBE_PRIOR, "predictions_probe.csv")
+    write_ablation(test_rows, lt, lex, costs)
 
     manifest = {
         "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),

@@ -185,7 +185,7 @@ class Belief:
 
 
 def update_belief(feats: Features, lt: LikelihoodTable, prior: dict,
-                  lexical=None, text: str = "") -> Belief:
+                  lexical=None, text: str = "", use_features: bool = True) -> Belief:
     """
     Naive Bayes update in log space. Every term is auditable.
 
@@ -204,10 +204,11 @@ def update_belief(feats: Features, lt: LikelihoodTable, prior: dict,
             continue
         total = math.log(p0)
         per_feature = {}
-        for name, level in feats.as_dict().items():
-            lp = math.log(lt.p(state, name, level))
-            per_feature[name] = round(lp, 6)
-            total += lp
+        if use_features:
+            for name, level in feats.as_dict().items():
+                lp = math.log(lt.p(state, name, level))
+                per_feature[name] = round(lp, 6)
+                total += lp
         if lexical is not None and text:
             ref = State.GENUINE.value
             lex_state = State.GENUINE.value if state == State.SOLICITED else state.value
