@@ -32,7 +32,7 @@ python experiments/build_testset.py
 python experiments/run_experiment.py
 
 # 4. Score everything
-python tests/evaluate.py
+python experiments/evaluate.py
 ```
 
 Every step is seeded and deterministic. Running the three commands on a clean
@@ -44,7 +44,7 @@ checkout reproduces every number in `results/` exactly.
 |---|---|
 | `build_testset.py` | `data/fit_set.csv`, `data/test_set.csv`, `data/probe_set.csv` |
 | `run_experiment.py` | `results/predictions_test.csv`, `results/predictions_probe.csv`, `results/likelihoods.json`, `results/lexical_top_words.md`, `results/run_manifest.json` |
-| `evaluate.py` | `results/metrics.json`, `results/metrics.md`, `results/failures.md` |
+| `experiments/evaluate.py` | `results/metrics.json`, `results/metrics.md`, `results/failures.md` |
 
 ---
 
@@ -158,13 +158,11 @@ src/
 experiments/
   build_testset.py   deterministic splits + probe set
   run_experiment.py  runs baseline and both policies
-tests/
-  evaluate.py    metrics, calibration, failure analysis
+  evaluate.py        metrics, calibration, failure analysis
 data/            source dataset and generated splits
 results/         predictions, metrics, failures, audit files
-docs/
-  research-file.md      terms, sources, communities, AI errors
-  discussion-record.md  every public discussion and what it changed
+research-file.md      terms, sources, communities, AI errors
+discussion-record.md  every public discussion and what it changed
 ```
 
 ---
@@ -175,5 +173,5 @@ This code was written with AI assistance. The design decisions it implements —
 the probability bands, flag-with-explanation instead of autonomous hide, the
 volume-weighted cost matrix, the specificity signal and its fragility, and the
 third hidden state — came from public discussions with people on Reddit and X,
-each recorded with a link in `docs/discussion-record.md`. Where a number is an
+each recorded with a link in `discussion-record.md`. Where a number is an
 assumption rather than a measurement, the code says so at the point of use.

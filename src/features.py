@@ -76,7 +76,7 @@ def _specificity_evidence(text: str, text_lower: str, tokens: list[str]) -> int:
     """
     Count concrete, checkable elements.
 
-    Rationale, recorded in docs/discussion-record.md: u/studyhall109 and
+    Rationale, recorded in discussion-record.md: u/studyhall109 and
     u/XxLogitech98xX (r/Yelp) independently said the separating signal in text
     alone is whether the review names something falsifiable - a dish, a
     quantity, a sequence of events - rather than how positive or negative it

@@ -4,7 +4,7 @@ Marker word lists used by the feature extractor and the baseline classifier.
 PROVENANCE
 ----------
 These lists were produced with LLM assistance and then edited by hand. That
-approach is a design decision recorded in docs/discussion-record.md: a
+approach is a design decision recorded in discussion-record.md: a
 commenter in r/learnmachinelearning (u/Elegant_Quantity_583) suggested
 generating the term list with an LLM rather than hand-writing it, and the
 follow-up question in that thread was whether LLM-generated rules inflate

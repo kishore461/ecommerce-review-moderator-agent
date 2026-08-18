@@ -50,7 +50,7 @@ class State(str, Enum):
     pointed out that when people say "fake review" they often mean a friend
     writing for a friend rather than paid spam. The visit may genuinely have
     happened and the detail may be true, so the specificity signal cannot
-    detect it. See docs/discussion-record.md.
+    detect it. See discussion-record.md.
 
     NOTE ON DATA: the labelled dataset used for the main experiment contains
     only human-written and machine-generated reviews. It has no SOLICITED
