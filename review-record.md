@@ -155,7 +155,7 @@ knowledge of why each choice was made, did not see.
 | Claude (fresh session) | **The cost comparison is circular.** `decision_cost` scores every system with the same `CostModel` that `ExpectedCostPolicy` takes the argmin of. | **Accept** | It is a theorem about argmin, not a result. | README now says so in the results section rather than presenting the cost figure as a finding. | `experiments/evaluate.py: decision_cost` and `src/agent.py: ExpectedCostPolicy.decide` use the same object. |
 | Claude (fresh session) | **Policy B can never flag.** With this cost matrix, `E[flag] − E[route] = g + 0.5s ≥ 0`, so flag is weakly dominated for every belief. B's only enforcement action is autonomous hiding — the exact behaviour the r/Amazonsellercentral discussion argued against. | **Accept** | Verified algebraically and empirically: zero flags in 52 decisions. The A-vs-B comparison therefore confounds threshold-vs-cost with flag-only-vs-hide-only. | Documented as limitation 6. The cost matrix is **not** retuned — changing it to make flag competitive after seeing the results would be fitting the model to the outcome. | `results/metrics.json` action counts: `expected_cost` flag = 0 on both datasets. |
 | Claude (fresh session) | **The volume factor was only ever run at its most conservative point.** At larger sellers, hiding becomes cheaper than routing and the human queue disappears. | **Accept** | Verified by sweeping it. | Added a volume-factor sweep to `write_ablation`. | `results/ablation.md`: at 20,000 reviews Policy B routes **0** and hides **27 of 40**, with 8 genuine reviews hidden. |
-| Claude (fresh session) | **The `solicited` state is mathematically unreachable.** Its likelihoods are copied from `genuine` on five of six features and its lexical LLR is fixed at 0, so `P(solicited)/P(genuine) ≤ 0.402` for any text. It is a fixed multiple of its prior, not an inference. | **Accept** | Verified against the decision record: the ratio there is 0.2840/0.7069 = 0.4017, exactly the bound. | Limitation 3 rewritten: the state is *structurally undetectable*, not merely assumption-based. The decision record's claim that the belief "moved into" that state is corrected. | `src/agent.py: _derive_solicited`; `decisions/probability-decision-record.md` §4. |
+| Claude (fresh session) | **The `solicited` state is mathematically unreachable.** Its likelihoods are copied from `genuine` on five of six features and its lexical LLR is fixed at 0, so `P(solicited)/P(genuine) ≤ 0.402` for any text. It is a fixed multiple of its prior, not an inference. | **Accept** | Verified against the decision record: the ratio there is 0.2840/0.7069 = 0.4017. **Later correction:** that verification used a stale record. Recomputed from the committed `results/likelihoods.json`, the bound is (0.1/0.6) x 2.2931 = **0.382**, and the highest ratio actually observed on the probe set is 0.38218. The finding stands; the number was wrong and is corrected in the README and the preprint. | Limitation 3 rewritten: the state is *structurally undetectable*, not merely assumption-based. The decision record's claim that the belief "moved into" that state is corrected. | `src/agent.py: _derive_solicited`; `decisions/probability-decision-record.md` §4. |
 | Claude (fresh session) | **60% of beliefs are pinned by `LLR_CLIP`.** Raw lexical LLRs span roughly −79 to +82; 24 of 40 test cases saturate ±4.0 exactly, making the belief a step function of the LLR's sign. The 0.85 threshold is barely load-bearing — 0.80 and 0.85 give identical decisions. | **Accept** | This undercuts the framing of Policy A as "a test of the practitioner's 85%". | Documented as limitation 4. `LLR_CLIP` sweep logged as future work rather than run now. | `src/lexical.py: LLR_CLIP`; belief distribution in `results/predictions_test.csv` is bimodal. |
 | Claude (fresh session) | **Near-duplicate leakage, on one class only.** De-duplication is exact-string; the machine-generated rows repeat near-verbatim spans. At token-Jaccard > 0.30, 11 of 20 test fakes have a fit-set neighbour against 0 of 20 genuine. | **Accept** | The leakage is asymmetric, so it inflates recall specifically. | Documented as limitation 2. Not re-split: a near-duplicate-aware split would change every number in the project and there is no time to re-run the review cycle over it. Logged as the highest-priority fix. | `experiments/build_testset.py:165`, exact-match de-duplication only. |
 | Claude (fresh session) | **The baseline cannot test the claim it exists to test** — there is only one term list, the LLM-generated one, and no hand-written control. | **Accept** | Correct. Without a control list the comparison is undefined. | The docstring claim is now qualified; the lexical-only condition serves as the stronger comparator instead. | `src/baseline.py` docstring; `results/ablation.md` lexical-only rows. |
@@ -248,3 +248,49 @@ the ablation bug. Gemini found the things a different training distribution
 notices: an ethics risk around dialect, a latent crash, a misnamed metric, and a
 constraint violation hidden inside a narrative. Neither set subsumes the other,
 which is the actual argument for using more than one tool.
+
+---
+
+## Review 8 — Numeric audit of the preprint (Section 13)
+
+**Tool:** Claude, in a separate session with no access to the drafting
+conversation. Given `paper/main.tex` and every ground-truth file, and asked to
+find numbers, equations, quotes and attributions in the preprint that do not
+match the artefacts. It was explicitly forbidden from editing anything.
+
+Twenty findings; the nine that changed the preprint:
+
+| Finding | Accept / reject | Change |
+|---|---|---|
+| **Eq. (3)'s sign convention is wrong.** The paper said the lexical LLR is added with sign $-$ for `genuine`; `update_belief` adds it only to `fake` and gives `genuine` and `solicited` exactly zero. As written the paper described a model with twice the lexical evidence it actually applies. | **Accept — most serious finding** | Equation text rewritten. |
+| **The 0.402 bound is stale.** Recomputed from `results/likelihoods.json`: (0.1/0.6) × 2.2931 = **0.382**; highest observed on the probe set 0.38218. The 0.402 came from the decision record and was carried into the README and review 4's verification note. | **Accept** | Corrected in `README.md` limitation 3, in review 4's entry above, and in the preprint. |
+| **"56 comments", not 44.** Counting reviewer rows across the seven passes gives 7+8+9+12+5+8+7 = 56. | **Accept** | AI-use statement corrected. |
+| **Failure-condition counts are decisions, not cases.** `evaluate.py` emits one row per (system × case). "SOLICITED-INVISIBLE (5 probe cases)" is impossible — the probe set has two solicited rows. | **Accept** | Both counts now printed, and the pooling stated. |
+| **"Four conditions account for all of them"** — five were listed and `failures.md` names nine, covering 29 of 35 incorrect decisions. | **Accept** | Corrected. |
+| **"Features alone decide nothing"** is false for Policy A, which decides 18 of 40 (all permits) and routes 22. | **Accept** | Corrected here and in `README.md`. |
+| **The ablation table hid a false positive.** Dropping the FP and precision columns made the features' larger contribution — 2 FP down to 1, precision 0.867 → 0.933 on A — invisible. | **Accept** | Columns restored. |
+| **`flag` and `hide` against `solicited` are scaled by $v$** in the code; the paper's cost table printed them unscaled. Invisible at $v=1$, material to the paper's own 20,000-review sweep. | **Accept** | Table corrected. |
+| **"A direct test of the design change"** contradicts limitation 6: `flag` is weakly dominated, so Policy B never flags and the comparison is confounded. | **Accept** | Rewritten as a confounded comparison, with the domination result stated in the paper. |
+
+Also accepted and softened without a numeric change: the baseline's stated
+purpose (it cannot test the false-positive claim without a hand-written control
+list — this had been fixed in `src/baseline.py` after review 4 and the
+unqualified version had crept back into the preprint), "every parameter is in
+the manifest" (seventeen are; the smoothing constants, the solicited weights and
+the cost magnitudes are not), "six public discussions" (six decisions from four
+threads), and the abstract's three-state framing (the main run carries zero
+prior mass on the third state).
+
+**Rejected:** none outright. The one finding not acted on is the observation
+that the abstract quotes recall 0.550 → 0.778 while the paper argues only the
+routed-in-denominator column is like-for-like against the baseline; the abstract
+now leads with 0.700 and gives 0.778 in parentheses, which is a partial fix
+rather than a full one, because dropping 0.778 entirely would hide the number
+the ablation and sensitivity sections are stated in.
+
+**The lesson.** Review 4 established that a reviewer without the author's
+context finds what a reviewer with it cannot. This pass repeated the result one
+level up: the draft was written by the same assistant that produced every
+number in it, and it still mis-stated its own equation, its own bound and its
+own comment count. Checking a document against its artefacts is a different
+operation from writing it, and it has to be run separately.

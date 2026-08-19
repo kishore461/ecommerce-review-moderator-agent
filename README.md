@@ -130,8 +130,11 @@ reliability table for this reason.
 **The six hand-designed features contribute almost nothing measurable.** With the
 feature terms genuinely omitted, the lexical channel alone reaches recall 0.765
 (A) and 0.867 (B), against 0.778 and 0.867 for the full system — a difference of
-one case on A and zero on B. Features alone decide nothing at all: recall 0.000,
-because the belief never leaves the deferral band. An earlier version of this
+one case on A and zero on B. On A the features also remove one false positive
+(precision 0.933 against 0.867), which is the larger of their two contributions.
+Alone they never reach the acting threshold: under Policy A they permit 18 cases
+and route the other 22, giving recall 0.000; under Policy B they route all 40.
+An earlier version of this
 README claimed the features raised recall from 0.632 to 0.778; that was an
 artefact of a bug in the ablation, corrected after review 4. See
 `results/ablation.md` and `review-record.md`.
@@ -158,7 +161,7 @@ These are material, and they qualify every number above.
    fully earned.
 3. **The `solicited` state is structurally undetectable.** Its likelihoods are
    copied from `genuine` for five of six features and it is assigned a lexical
-   LLR of exactly zero, so `P(solicited)/P(genuine)` is bounded above by 0.402
+   LLR of exactly zero, so `P(solicited)/P(genuine)` is bounded above by 0.382
    for any text whatsoever. It is not inferred from evidence; it is a fixed
    multiple of its prior. Where the decision record says the belief "moved into"
    this state, the prior put it there.
@@ -237,8 +240,11 @@ experiments/
   build_testset.py   deterministic splits + probe set
   run_experiment.py  runs baseline and both policies
   evaluate.py        metrics, calibration, failure analysis
+  make_figure.py     builds paper/figures/figure1.pdf from results/
 data/            source dataset and generated splits
 results/         predictions, metrics, failures, audit files
+paper/           main.tex, references.bib, figures/, preprint.pdf
+decisions/       probability-decision-record.md
 research-file.md      terms, sources, communities, AI errors
 discussion-record.md  every public discussion and what it changed
 ```
