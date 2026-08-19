@@ -18,7 +18,9 @@ nothing else.
 
 ## Reproducing the experiment
 
-Requires Python 3.11+. No third-party packages, no network access, no API keys.
+Requires Python 3.11+. The three experiment commands need no third-party
+packages, no network access and no API keys. Only `experiments/make_figure.py`,
+which builds the preprint figure, needs matplotlib.
 
 ```bash
 # 1. Place the dataset
@@ -75,8 +77,11 @@ That is the only human faculty imitated here.
   belief. No threshold anywhere; the effective threshold falls out of the cost
   matrix and the review volume. This policy *is* allowed to select `hide`.
 
-The comparison is therefore a direct test of the design change made after the
-r/Amazonsellercentral discussion.
+The comparison was intended as a direct test of the design change made after
+the r/Amazonsellercentral discussion. It is not one: under this cost matrix
+`flag` is weakly dominated by `route` for every belief, so B never flags and its
+only enforcement action is hiding. The comparison confounds threshold-versus-cost
+with flag-only-versus-hide-only. See limitation 6.
 
 ### Baseline
 
@@ -86,8 +91,130 @@ F1**; the tuned value and the objective are both recorded in
 `results/run_manifest.json`. It emits a count rather than a probability, so no
 calibration curve is reported — that count *could* be mapped to one, so the
 absence is a choice, not an impossibility.
-It exists to test a specific claim from r/learnmachinelearning: that
-LLM-generated keyword lists inflate false positives.
+Its keyword list was generated with LLM assistance, following a suggestion in
+r/learnmachinelearning. It cannot settle the follow-up question asked there —
+whether LLM-generated rules inflate false positives — because there is no
+hand-written control list to compare against; the lexical-only ablation row is
+the stronger comparator instead.
+
+---
+
+## The ten design questions
+
+Section 12 of the brief asks ten questions about the selected problem. The
+answers below are the ones the built system actually supports, with the file or
+number that backs each. Where the honest answer is "it doesn't", that is what
+is written.
+
+**1. What can the agent observe?**
+The review text and the star rating. Nothing else. This is enforced rather than
+promised: `ModerationAgent.observe()` takes `(text, rating)` and has no other
+parameter. From those two it derives six discrete features (`src/features.py`)
+and one clipped log-likelihood ratio over a 3,835-term unigram vocabulary
+(`src/lexical.py`). It never sees account age, purchase history, IP address,
+photos, timestamps, or the reviewer's other reviews. The source dataset even
+carries a `category` column, and the agent does not read it.
+
+**2. What information is hidden?**
+The true state — `genuine`, `fake`, or `solicited` — and everything that would
+settle it: whether the reviewer bought the product, whether money changed hands,
+whether they know the seller personally, and whether a machine wrote the text.
+The labels available for training are not this. They are `CG`/`OR` — machine
+versus human authorship — which is a different question, and that mismatch is
+limitation 1.
+
+**3. What will a human observe that the agent cannot?**
+The reviewer's profile, and they will look at it *first*. u/XxLogitech98xX in
+r/Yelp said that under 15 reviews he does not read the review text at all. A
+human can also open the product page and see whether a "specific" detail was
+lifted from it, spot a photo reused across listings, and — at Yelp — see user
+reports feeding the same queue. This produces the failure condition recorded in
+`discussion-record.md` as **inverted ordering**: for a human, text is a
+tiebreaker after the profile check; for this agent, text is the first and only
+filter.
+
+**4. What must the agent remember?**
+Fixed at fit time: the likelihood table, the lexical vocabulary, the prior, and
+the cost model with its volume factor. Across decisions: `FeedbackLog` entries —
+case id, action taken, source (`queue` or `appeal`), and the human verdict.
+It does **not** remember the review texts it has already seen, so it cannot
+detect that the same text appears twice. That is not a small omission: the
+largest belief movement measured anywhere in this project — 0.293 to 0.716 on
+`P(not genuine)` — comes from exactly that evidence
+(`decisions/probability-decision-record.md`), and the agent as built cannot
+observe it.
+
+**5. When must the agent ask a question?**
+When the belief lands in the deferral band. Policy A routes at
+`0.50 <= p < 0.85`, which is 6 of 40 held-out cases (15%). Policy B routes
+whenever routing has the lowest expected cost, which is 11 of 40 (27.5%). The
+threshold that matters is not a probability but the review volume: sweeping
+`total_reviews` in `results/ablation.md` shows Policy B routing 27.5% of cases
+at 200 reviews and **nothing at all** at 20,000, because hiding becomes cheaper
+than a person's time. The asking mechanism switches itself off for the largest
+sellers.
+
+**6. Which incorrect action can be corrected?**
+In order of reversibility: `route_to_human` (nothing has happened yet; it costs
+a moderator's time), `flag_with_explanation` (visible friction, reversible on
+appeal), `hide` (technically reversible, but this design gives the review's
+author no notification and no appeal route, and a review's value is
+time-sensitive), and `permit` (correctable in principle if somebody reports it,
+uncorrected in practice because nobody comes back to say a fake got through).
+Measured on the held-out set, 6.7% of Policy A's enforcement actions and 7.1% of
+Policy B's were against reviews a human judged genuine
+(`results/run_manifest.json`, `feedback_rates`).
+
+**7. Who has the cost of an incorrect action?**
+Four parties, and only three are in the cost model.
+
+| Party | Bears | In `CostModel`? |
+|---|---|---|
+| Seller | a permitted fake (sabotage), a hidden genuine 5-star | Yes, scaled by volume factor `v` |
+| Buyer | deception by a permitted fake | Yes, as `permit` under `fake` = 5.0 |
+| Moderator | time spent on routed cases | Yes, flat 1.0, modelled as free, instant and infallible |
+| **The review's author** | loses their words, no notice, no appeal | **No — not represented at all** |
+
+The volume factor makes this worse rather than better: the harm to the person
+whose review was removed is scaled by the *seller's* review count. The party
+harmed is not the party the cost is measured against (limitation 9).
+
+**8. Which evidence changes the belief?**
+Measured, not asserted. The lexical channel does nearly all the work: with the
+features genuinely removed, recall is 0.765 (A) and 0.867 (B) against 0.778 and
+0.867 for the full system. The features alone never reach the acting threshold
+at all. Within the features, `length_band` carries the most signal (at its
+lowest level, P = 0.0037 under `fake` against 0.0286 under `genuine`), and
+`polarity_mismatch` — the star/text mismatch that the project started out
+believing in — carries almost none, at a log ratio of roughly 0.05. And for 24
+of 40 cases the raw ratio saturates the ±4.0 clip, so the belief there is a step
+function of the ratio's sign rather than a response to the evidence's strength.
+
+**9. Is the historical evidence comparable?**
+No, in three separate ways, and this is the project's most serious threat to
+validity. First, the fit data is machine-generated text versus human text, while
+the problem is a *paid human* writing a fake — different question. Second, the
+generator is GPT-2; a 2026 fake would be written with a far better model, so the
+lexical channel is fit on an artefact that is already obsolete. Third, even
+within the dataset the comparison is compromised: at token-Jaccard > 0.30, 11 of
+20 test fakes have a near-neighbour in the fit split against 0 of 20 genuine, so
+the leakage lands on the positive class and inflates recall specifically. The
+one external reference point — the 1.36–1.84% false-positive rate for text-only
+detection at scale, from @savipww on X — is from AI-detection of articles, not
+review moderation, and is a rough comparison rather than a like-for-like one.
+
+**10. How does the agent learn after an action?**
+It does not update. `FeedbackLog` records verdicts, but nothing re-fits the
+likelihood table and nothing moves a threshold. What the loop produces is two
+measurable rates: the genuine rate inside the queue (0.667 for A, 0.545 for B)
+and the appeal overturn rate (0.067 for A, 0.071 for B), both in
+`results/run_manifest.json`. Two things have to be said about them. They are
+computed by feeding ground truth in as the human verdict, so they are relabelled
+labels rather than feedback (limitation 8). And the signal is structurally
+one-sided: permitted reviews generate no correction, so this loop can only ever
+observe false positives and never false negatives — u/galvinw's point in
+r/learnmachinelearning. Any threshold drifted from this telemetry would be
+drifting on half the error surface.
 
 ---
 

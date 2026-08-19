@@ -253,18 +253,23 @@ def main() -> None:
             w.writeheader()
             w.writerows(records)
         print(f"{out_name}: {len(records)} decisions over {len(rows)} cases")
+        rates = {}
         for name, ag in agents.items():
             q = ag.feedback.genuine_rate_in_queue()
             ap = ag.feedback.appeal_overturn_rate()
+            rates[name] = {"genuine_rate_in_queue": q,
+                           "appeal_overturn_rate": ap}
             if q is not None:
                 print(f"  {name}: genuine rate inside the queue {q:.3f} "
                       f"(prevalence in the ambiguity band, NOT an overturn rate)")
             if ap is not None:
                 print(f"  {name}: appeal overturn rate {ap:.3f} "
                       f"(enforcement actions a human judged genuine)")
+        return rates
 
-    run(test_rows, DEFAULT_PRIOR, "predictions_test.csv")
-    run(probe_rows, PROBE_PRIOR, "predictions_probe.csv")
+    feedback = {}
+    feedback["test"] = run(test_rows, DEFAULT_PRIOR, "predictions_test.csv")
+    feedback["probe"] = run(probe_rows, PROBE_PRIOR, "predictions_probe.csv")
     write_ablation(test_rows, lt, lex, costs)
 
     manifest = {
@@ -286,6 +291,12 @@ def main() -> None:
         "lexical_vocab_size": len(lex.vocab),
         "lexical_llr_clip": LLR_CLIP,
         "lexical_min_doc_freq": MIN_DOC_FREQ,
+        # Feedback rates were previously printed to stdout only, so the README
+        # and review-record cited numbers that were in no committed file.
+        # genuine_rate_in_queue is a prevalence, NOT an overturn rate; only
+        # appeal_overturn_rate is an overturn. Both are computed by feeding
+        # ground truth in as the human verdict - see limitation 8.
+        "feedback_rates": feedback,
     }
     with open(os.path.join(RESULTS, "run_manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)

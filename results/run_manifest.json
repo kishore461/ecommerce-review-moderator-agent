@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-08-18T14:34:50+00:00",
+  "generated_utc": "2026-08-19T10:05:59+00:00",
   "model_version": "agent-0.1.0",
   "baseline_version": "baseline-keyword-1.0",
   "baseline_threshold_tuned_on_fit": 1,
@@ -24,5 +24,27 @@
   "testset_seed": 20260817,
   "lexical_vocab_size": 3835,
   "lexical_llr_clip": 4.0,
-  "lexical_min_doc_freq": 5
+  "lexical_min_doc_freq": 5,
+  "feedback_rates": {
+    "test": {
+      "fixed_band": {
+        "genuine_rate_in_queue": 0.6666666666666666,
+        "appeal_overturn_rate": 0.06666666666666667
+      },
+      "expected_cost": {
+        "genuine_rate_in_queue": 0.5454545454545454,
+        "appeal_overturn_rate": 0.07142857142857142
+      }
+    },
+    "probe": {
+      "fixed_band": {
+        "genuine_rate_in_queue": 0.0,
+        "appeal_overturn_rate": 0.0
+      },
+      "expected_cost": {
+        "genuine_rate_in_queue": 0.0,
+        "appeal_overturn_rate": 0.0
+      }
+    }
+  }
 }
