@@ -38,8 +38,23 @@ python experiments/evaluate.py
 ```
 
 Every step is seeded and deterministic. Running the three commands against the
-same source download reproduces every number in `results/` exactly. The source
-file is not pinned by checksum - see limitation 16.
+same source download reproduces every number in `results/` exactly, on Windows
+as well as Linux — every generated file is written with `newline="\n"` so the
+outputs are byte-identical across platforms rather than merely equal in content.
+The one field that always differs is `generated_utc` in
+`results/run_manifest.json`, which records when the run happened.
+
+Running the project on a second machine (Windows, Python 3.12) found two real
+reproducibility defects that a single-machine run could never surface. Both are
+fixed. First, every generated text file was being written with the platform's
+native line ending, so the same content produced different bytes on Windows.
+Second, `LexicalModel.top_words` iterated a `set` and sorted on score alone, so
+words with equal scores came out in a different order on every run — Python
+randomises string hashing per process. `results/lexical_top_words.md` therefore
+changed on each run while every number in it stayed the same. The sort now falls
+back to the word itself.
+
+The source file is not pinned by checksum - see limitation 16.
 
 ### What each step writes
 

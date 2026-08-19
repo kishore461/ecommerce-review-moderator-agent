@@ -96,13 +96,23 @@ class LexicalModel:
         return max(-LLR_CLIP, min(LLR_CLIP, raw))
 
     def top_words(self, state: str, reference: str, n: int = 25) -> list[tuple[str, float]]:
-        """Most discriminative words, for the audit trail."""
+        """
+        Most discriminative words, for the audit trail.
+
+        `self.vocab` is a set, so iterating it follows string hash order, which
+        Python randomises per process unless PYTHONHASHSEED is fixed. Sorting on
+        the score alone therefore left tied words in a different order on every
+        run, and `results/lexical_top_words.md` changed each time even though no
+        number in it did. Found when the experiment was first run on a second
+        machine. The sort key now falls back to the word itself, so the file is
+        byte-identical across runs, machines and Python versions.
+        """
         scored = []
-        for w in self.vocab:
+        for w in sorted(self.vocab):
             a = self.log_prob.get((state, w))
             b = self.log_prob.get((reference, w))
             if a is None or b is None:
                 continue
             scored.append((w, a - b))
-        scored.sort(key=lambda kv: -kv[1])
+        scored.sort(key=lambda kv: (-kv[1], kv[0]))
         return scored[:n]

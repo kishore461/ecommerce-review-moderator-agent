@@ -178,7 +178,7 @@ def write_ablation(test_rows, lt, lex, costs) -> None:
               "stays at 1.0. The reported configuration (200 reviews) is the most "
               "conservative point in this range, and that was not previously stated.",
               ""]
-    with open(os.path.join(RESULTS, "ablation.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(RESULTS, "ablation.md"), "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines))
     print("ablation.md written")
 
@@ -191,11 +191,11 @@ def main() -> None:
     probe_rows = read_csv("probe_set.csv")
 
     lt = fit_likelihoods(fit_rows)
-    with open(os.path.join(RESULTS, "likelihoods.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(RESULTS, "likelihoods.json"), "w", encoding="utf-8", newline="\n") as f:
         f.write(lt.to_json())
 
     lex = LexicalModel().fit([(r["text"], r["true_state"]) for r in fit_rows])
-    with open(os.path.join(RESULTS, "lexical_top_words.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(RESULTS, "lexical_top_words.md"), "w", encoding="utf-8", newline="\n") as f:
         f.write("# Most discriminative unigrams (fit split only)\n\n")
         f.write(f"Vocabulary {len(lex.vocab)} words, min document frequency "
                 f"{MIN_DOC_FREQ}, LLR clip +/-{LLR_CLIP}.\n\n")
@@ -298,7 +298,7 @@ def main() -> None:
         # ground truth in as the human verdict - see limitation 8.
         "feedback_rates": feedback,
     }
-    with open(os.path.join(RESULTS, "run_manifest.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(RESULTS, "run_manifest.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(manifest, f, indent=2)
     print("run_manifest.json written")
 

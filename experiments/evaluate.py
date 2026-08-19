@@ -333,14 +333,14 @@ def main() -> None:
         evaluate_file("predictions_test.csv", "Held-out test set", costs),
         evaluate_file("predictions_probe.csv", "Supplementary probe set", costs),
     ]
-    with open(os.path.join(RESULTS, "metrics.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(RESULTS, "metrics.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(reports, f, indent=2)
-    with open(os.path.join(RESULTS, "metrics.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(RESULTS, "metrics.md"), "w", encoding="utf-8", newline="\n") as f:
         f.write(to_markdown(reports, costs))
 
     test_fail = failures_for(read("predictions_test.csv"))
     probe_fail = failures_for(read("predictions_probe.csv"))
-    with open(os.path.join(RESULTS, "failures.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(RESULTS, "failures.md"), "w", encoding="utf-8", newline="\n") as f:
         f.write(failures_markdown(test_fail, probe_fail, costs))
 
     print(to_markdown(reports, costs))
