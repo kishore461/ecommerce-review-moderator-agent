@@ -164,7 +164,7 @@ knowledge of why each choice was made, did not see.
 
 | Before | After |
 |---|---|
-| "Features raise recall 0.632 → 0.778" | Features add 0.013 (A) and 0.000 (B). They decide nothing alone. |
+| "Features raise recall 0.632 → 0.778" | Features add 0.013 (A) and 0.000 (B). Alone they never reach the acting threshold (review 8 corrected the original wording here, which said they "decide nothing" — under Policy A they decide 18 of 40, all permits). |
 | "Both policies beat the baseline on every measure" | False — the baseline wins on the probe set. |
 | "B buys accuracy with human effort" | Under like-for-like accounting **A is more accurate than B** (0.700 vs 0.650). |
 | Failure conditions assigned by star rating | Assigned by the features the agent actually read. |

@@ -67,6 +67,22 @@ To design a utility-based probabilistic AI agent that makes cost-sensitive moder
 
 The list covers the four categories required: researchers (1–10, 22), engineers and builders (11, 12, 18–21), users and practitioners (13, 24, 25), and critics (14–17, 23). Every account was opened individually on 16 August 2026 and confirmed to have posted recently.
 
+### Engaged since the initial list (not counted in the 25)
+
+These accounts were not on the 16 August list. They surfaced later because the
+live technical discussion moved onto a single Pangram thread on 19 August, and
+each was replied to rather than merely followed. Links are in
+`discussion-record.md`.
+
+| Handle | Why it matters to this problem |
+|---|---|
+| @max_spero_ | Pangram's founder. Published the exact conditions under which his detector does and does not generalise — the closest thing to a public spec for the failure mode this project has |
+| @rosmine | Launched Deft, a model fine-tuned away from "slop" phrasing. States that short prompts get detected as AI, which is this project's own failure mode seen from the generator's side |
+| @zeke | Ran a detector across ~100k words of his own writing, so he holds ground truth for his own corpus — the position almost nobody evaluating a detector is in |
+| @markvalorian | Argued the detector will be Goodhart-ed out of existence once it becomes a target |
+| @cryptotriv | Argues provenance is the real question and style detection is a proxy for it |
+| @polsia | Building per-vertical detection with signed provenance; the per-category argument bears directly on limitation 11 |
+
 ### Checked and rejected (10)
 
 | Handle | Reason for rejection |
@@ -95,6 +111,21 @@ The active technical discussion relevant to this problem concerns false positive
 3. **Justifying Recommendations using Distantly-Labeled Reviews (Ni, Li, McAuley, 2019):** An updated framework for Amazon reviews, useful for analyzing rating-to-text mismatches.
 4. **The "Fake Reviews Dataset" (Salminen / Kaggle):** A dataset containing 40,000 fake and real product reviews, excellent for baseline testing.
 5. **OpenAI Moderation API Documentation:** Useful for observing how industry-standard content moderation agents handle probability thresholds and categorization.
+
+### What the preprint actually cites
+
+`paper/references.bib` holds six entries, and they are not the same five as
+above. Sources 1, 3 and 4 are cited. Source 2 (Amazon Review Data) is not cited
+directly — it reaches this project through Ni et al. 2019, which is. Source 5 is
+not cited, because it informed the design conversation rather than any claim in
+the paper, and the brief says not to use a reference before reading it. Three
+were added while writing, each because a specific claim needed backing:
+
+| Added | Backs |
+|---|---|
+| Elkan 2001, *The Foundations of Cost-Sensitive Learning* (IJCAI) | The expected-cost policy. The argmin rule and the result that probability thresholds are its special case are his |
+| Guo et al. 2017, *On Calibration of Modern Neural Networks* (ICML) | The expected-calibration-error estimator reported as ECE 0.145, and the point that confidence is not calibration |
+| Sap et al. 2019, *The Risk of Racial Bias in Hate Speech Detection* (ACL) | Limitation 17. Cited because it names an untested risk in this system, not because anything here was tested for it |
 
 ## Questions to Answer
 

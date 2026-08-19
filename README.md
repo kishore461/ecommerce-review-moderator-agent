@@ -387,6 +387,7 @@ data/            source dataset and generated splits
 results/         predictions, metrics, failures, audit files
 paper/           main.tex, references.bib, figures/, preprint.pdf
 decisions/       probability-decision-record.md
+social/          linkedin-post.md, x-thread.md
 research-file.md      terms, sources, communities, AI errors
 discussion-record.md  every public discussion and what it changed
 ```

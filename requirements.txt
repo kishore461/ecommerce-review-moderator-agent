@@ -1,1 +1,8 @@
-# No third-party dependencies. Python 3.11+ standard library only.
+# The three experiment commands need no third-party packages:
+#   python experiments/build_testset.py
+#   python experiments/run_experiment.py
+#   python experiments/evaluate.py
+# Python 3.11+ standard library only.
+#
+# Only the preprint figure needs an external package.
+matplotlib>=3.8
