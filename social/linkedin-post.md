@@ -1,5 +1,13 @@
 # LinkedIn post
 
+**Published 4 October 2026:**
+https://www.linkedin.com/feed/update/urn:li:activity:7512409805207277568/
+
+Posted with `paper/preprint.pdf` attached as a LinkedIn document, titled
+"Deciding What to Do With a Review You Cannot Verify". The text below is as
+published; it was trimmed from this draft to fit LinkedIn's 3,000-character
+limit, and markdown emphasis was removed because LinkedIn does not render it.
+
 I spent this week building an agent that decides what to do with a customer
 review it cannot verify, and the most useful thing I can report is where it
 loses.
@@ -54,7 +62,7 @@ is a second one I like even less: I have run no dialect or demographic bias
 audit, and a unigram filter that treats brevity as evidence will sit most
 confidently on exactly the writer with the least standard English.
 
-Preprint attached — IJCAI style, written for a course, not submitted anywhere.
+Preprint attached — IJCAI style, not submitted anywhere.
 Code, data splits, failure analysis, and a record of every AI review comment I
 accepted or rejected: https://github.com/kishore461/ecommerce-review-moderator-agent
 
