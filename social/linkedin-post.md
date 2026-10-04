@@ -1,9 +1,5 @@
 # LinkedIn post
 
-One post, published once this week, with `paper/preprint.pdf` attached.
-
----
-
 I spent this week building an agent that decides what to do with a customer
 review it cannot verify, and the most useful thing I can report is where it
 loses.

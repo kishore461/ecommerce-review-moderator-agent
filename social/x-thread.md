@@ -1,10 +1,5 @@
 # X thread
 
-Post as a thread from @Kishore_mint. Attach `paper/preprint.pdf` to tweet 1.
-Every tweet below is under 280 characters.
-
----
-
 **1/7**
 
 I built an agent that decides whether to permit, warn, hide or report a
