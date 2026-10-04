@@ -339,8 +339,18 @@ These are material, and they qualify every number above.
     real customer who happens to know the owner.
 11. **The lexical channel partly memorises product vocabulary** — top
     discriminative unigrams include `schlage`, `taurus`, `sneaker`.
-12. **Specificity is not adversarially robust.** A Yelp reviewer pointed out that
-    a motivated faker lifts detail from the page they are attacking.
+12. **Specificity is not adversarially robust, but evading it is not free.** A
+    Yelp reviewer pointed out that a motivated faker lifts detail from the page
+    they are attacking, so the signal separates lazy fakes from real reviews and
+    fails against motivated ones. A later conversation on X added the half this
+    was missing: an engineer who had used a detector-evading rewriting model
+    reported that the output was unusable prose — *"even if it manages to evade
+    bot detection, it's useless"*. A moderation signal therefore does not have to
+    be unbeatable. It has to be expensive enough to beat that the resulting fake
+    is not worth posting. Nothing here measures that cost, and whether such
+    rewrites fail on voice or on meaning is still unanswered — the two cost an
+    attacker very different amounts to repair. See `discussion-record.md`
+    (@janotekk, 21 August).
 13. **Feedback is one-sided.** Permitted reviews generate no correction signal.
 14. **The probe set is synthetic and author-written**, which is why it is
     reported separately and never mixed into the 40.

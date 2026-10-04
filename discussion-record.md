@@ -3,7 +3,7 @@
 Public discussions for the e-commerce review moderation agent.
 Problem: *the agent observes a newly submitted customer review text and star rating; it must select permit, warn, hide, or report because whether the post is a genuine customer experience versus a paid spam or competitor fake review is not known.*
 
-**Status at 17 August 2026, 18:45 IST**
+**Status at 21 August 2026** (final — every row below is met)
 
 | Measure | Requirement | Current |
 |---|---|---|
@@ -11,8 +11,15 @@ Problem: *the agent observes a newly submitted customer review text and star rat
 | Reddit contributions | ≥10 (2 per community) | 10 |
 | Reddit discussions with 2+ replies | ≥5 | 6 |
 | X accounts followed | 15–25 | 25 |
-| X contributions | 21–28 over 7 days | 16 |
-| X discussions with 2+ replies | ≥3 | **2 — outstanding** |
+| X contributions | 21–28 over 7 days | **27** |
+| X discussions with 2+ replies | ≥3 | **3** |
+
+The 27 X contributions are the 24 distinct links in the table below, plus two
+replies to @polsia on 18 August whose permalinks were not captured, plus the
+closing reply in the @janotekk exchange. The three completed X discussions —
+meaning the other person answered and I answered back — are **@savipww**,
+**@SStevenWang** and **@janotekk**; each is a single row below containing all
+three turns.
 
 ---
 
@@ -62,6 +69,8 @@ Problem: *the agent observes a newly submitted customer review text and star rat
 | X | @cryptotriv | [Post](https://x.com/cryptotriv/status/2089957059936813403) · [My reply](https://x.com/Kishore_mint/status/2089962360027148591) | On provenance versus style: my agent classifies from text and rating alone, so it can never know who typed a review, only whether the writing looks like effort. Asked whether anonymous authorship is detectable at all, or only correlated with style | No reply yet | — | Sharpens the framing of limitation 12: specificity is evidence of effort, not evidence of a real visit |
 | X | @max_spero_ | [Post](https://x.com/max_spero_/status/2089938824474263644) · [My reply](https://x.com/Kishore_mint/status/2090025256337686731) | He published the conditions under which Pangram does and does not generalise - all of them properties of the generator (base model, narrow fine-tune, degraded output). Replied that mine broke on the *domain* instead: the most discriminative unigrams in my review classifier are product nouns (schlage, taurus, sneaker), so it learned the catalogue rather than the authorship. Asked whether Pangram stays stable when both classes share a vocabulary | No reply yet | — | Directly targets limitation 11. If answered, it decides whether category-held-out evaluation is a fix or a dead end |
 | X | @rosmine | [Post](https://x.com/rosmine/status/2089777640412782811) · [My reply](https://x.com/Kishore_mint/status/2090026354947522897) | Their Deft launch notes that short prompts are likely to be detected as AI. Replied that this is the same asymmetry from the other side - my review classifier is most confident exactly where it is most wrong, on short plain text - and asked whether that is short *output* being detected or the model falling back to its own voice, since the two have different fixes | No reply yet | — | Bears on limitation 4 and limitation 17: brevity is treated as evidence by both systems, and neither has isolated why |
+| X | @max_spero_ (sub-thread with @fabianstelzer) | [His claim](https://x.com/max_spero_/status/2089953316289589292) · [My reply](https://x.com/Kishore_mint/status/2090311715363909766) | He stated that using Pangram as an RL signal or eval for better writing "never works", without giving a mechanism. Offered one measured in this project: 24 of 40 test cases saturate the clipped log-likelihood ratio exactly, so above the clip the score is a step function of the ratio's sign rather than a gradient - there is nothing left to hill-climb. Asked whether Pangram's confidence flattens the same way at the top of its range | Awaiting reply (posted 20 Aug) | — | No change yet. If the answer is yes, limitation 4 stops being a defect peculiar to this agent and becomes a general property of saturating detectors - which would also mean published detector thresholds are harder to game than @br11k_dev's evasion result implies |
+| X | @janotekk | [His post](https://x.com/janotekk/status/2090672036628893926) · [My reply](https://x.com/Kishore_mint/status/2090687651817111593) · [His answer](https://x.com/janotekk/status/2090734059450519992) · [My reply](https://x.com/Kishore_mint/status/2090815131009921444) | He tried Deft and judged the writing unusable, saying the only use he could see for it was circumventing slop detection - an independent test, from actual use, of Max Spero's claim that optimising against a detector costs output quality. Asked whether the worse writing actually cleared detection for him, or whether it was worse *and* still flagged, since only the first is a working evasion | **"restricting the model's word choices to evade detection has to lead to worse prose… I have only run it on a bunch of text that i would like rewritten and for that it has done a terrible job. Even if it manages to evade bot detection, it's useless"** - so he never established whether it evaded, because the output was unusable before that question mattered | Put his own last sentence back to him: if evasion produces text nobody would ship, the detector does not have to win outright, it only has to make evasion expensive. Asked whether the rewrites failed on voice or on meaning, since those cost an attacker different amounts to repair | **Design change — limitation 12 reframed.** Specificity was recorded as "not adversarially robust" because a faker can harvest concrete detail from the page. This exchange adds the missing half: harvesting is not free. A moderation signal does not need to be unbeatable, only expensive enough to beat that the resulting fake is not worth posting. The limitation now states the cost of evasion alongside its possibility |
 
 ---
 
@@ -77,6 +86,7 @@ Problem: *the agent observes a newly submitted customer review text and star rat
 8. **Third hidden state added** — non-independent solicited review (friends and family): real visit, real detail, not independent, invisible to the specificity feature *(r/Yelp — ADrPepperGuy)*
 9. **Published FPR reference** — 1.36–1.84% false positives for text-only detection at scale, adopted as a comparison point *(X — @savipww)*
 10. **Labelling section required** in the write-up, stating the provenance of every case and who decided each label *(r/learnmachinelearning — Minimum-Effort8355)*
+11. **Evasion cost added to the specificity limitation** — a signal does not have to be unbeatable, only expensive enough to beat that the fake stops being worth posting. Limitation 12 previously recorded only that specificity *can* be gamed *(X — @janotekk)*
 
 ## Open failure conditions identified
 
@@ -89,6 +99,7 @@ Problem: *the agent observes a newly submitted customer review text and star rat
 - **Sarcasm and rating mismatch** — glowing text with a one-star rating remains unresolved *(X — @goyalshaliniuk thread)*
 - **Domain vocabulary contaminates the authorship signal** — the most discriminative unigrams are product nouns, so the model may be identifying the catalogue rather than the writer. Question put to @max_spero_ (Pangram) on 19 Aug, unanswered
 - **Nobody has separated "short output is detectable" from "short input makes a model default to its own voice"** — both this agent and Deft fail on brevity, and neither has isolated the cause. Question put to @rosmine on 19 Aug, unanswered
+- **Saturation may destroy the gradient a detector exposes** — 24 of 40 test cases hit the ±4.0 log-likelihood clip exactly, so above it the score is a step function of sign rather than a gradient. Offered to @max_spero_ on 20 Aug as a candidate mechanism for his observation that using a detector as an RL signal "never works". Unanswered, so it stands as a hypothesis about this agent only
 
 ## Claims still to verify
 
@@ -97,3 +108,4 @@ Problem: *the agent observes a newly submitted customer review text and star rat
 - The real cost to a seller of a wrongly removed review — no seller has answered directly across two subreddits
 - Whether the three AI detectors in the Graphite study ever disagree on the same article (no kappa reported)
 - Whether that study separates AI-written from AI-edited text *(question outstanding with @savipww)*
+- Whether detector-evading rewrites fail on *voice* or on *meaning* — the two cost an attacker very different amounts to repair, and that difference decides how much protection the evasion-is-expensive argument actually buys *(question outstanding with @janotekk)*

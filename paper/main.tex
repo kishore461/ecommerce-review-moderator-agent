@@ -482,7 +482,13 @@ because its specifics are true.
 
 \paragraph{SPECIFICITY-HARVESTED (2 decisions, 1 probe case).} Detail lifted from the
 product page, permitted at $p=0.294$ --- the failure u/XxLogitech98xX predicted
-before we tested it.
+before we tested it. A later public discussion qualified it in the agent's
+favour. An engineer who had used a model fine-tuned to evade AI detection
+reported that its output was unusable prose: \emph{``even if it manages to evade
+bot detection, it's useless''}. If that generalises, a moderation signal does not
+have to be unbeatable --- only expensive enough to beat that the resulting fake
+is not worth posting. We have not measured that cost, and it is the difference
+between a defeated signal and an expensive one.
 
 Pooled across all three systems and both datasets --- so this is not a
 per-system cost --- permitting a fake occurs 19 times at 5.0 units (95.0
@@ -573,6 +579,10 @@ Open questions we cannot answer from here:
     \item How much of the reported performance survives a dialect audit? On the
           argument in Section~\ref{sec:limits}, item 6, we expect the answer to be
           uncomfortable.
+    \item When a rewrite evades a detector, does it lose the author's voice or
+          the passage's meaning? Those cost an attacker very different amounts to
+          repair, and the difference decides how much protection the
+          evasion-is-expensive argument actually buys.
 \end{itemize}
 
 \appendix
